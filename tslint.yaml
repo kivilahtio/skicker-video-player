@@ -1,0 +1,37 @@
+---
+
+defaultSeverity: warning
+extends:
+  - "tslint:all"
+rules:
+    no-consecutive-blank-lines: [true, 2]
+    max-line-length: [true, 160]
+    comment-format: false #Telegram discussion with @huovinenj arount 2018-01-22T16:26. No space after comment mark. Agreed 100%
+    import-spacing: false
+    no-empty: false
+    variable-name: false #Telegram discussion with @huovinenj around 2018-01-22T16:50. Using c-style naming convention?
+    typedef-whitespace:  #Telegram discussion with @huovinenj around 2018-01-22T15:47. Agreed 100% on this.
+      - call-signature:       nospace
+        index-signature:      nospace
+        parameter:            nospace
+        property-declaration: nospace
+        variable-declaration: nospace
+      - call-signature:       nospace
+        index-signature:      nospace
+        parameter:            nospace
+        property-declaration: nospace
+        variable-declaration: nospace
+    whitespace:
+      - true
+      - check-branch
+      - check-decl
+      - check-operator
+      #- check-module #Align import statements properly.
+      - check-separator
+      - check-rest-spread
+      #- check-type #Conflicts with typedef-whitespace 'nospace'
+      - check-typecast
+      - check-type-operator
+      - check-preblock
+rulesDirectory: []
+

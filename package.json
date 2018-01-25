@@ -1,0 +1,63 @@
+{
+  "name": "skicker-video-player",
+  "version": "0.0.1",
+  "description": "HTML5 module to playback video from multiple different sources",
+  "keywords": [
+    "video",
+    "youtube",
+    "player"
+  ],
+  "license": "Proprietary",
+  "author": "Olli-Antti Kivilahti <kivilahtio@gmail.com>",
+  "contributors": [
+    "Jouni Huovinen <jouni.huovinen@gmail.com>"
+  ],
+  "main": "release/videoplayer.js",
+  "typings": "release/videoplayer.d.ts",
+  "directories": {
+    "lib": "./src",
+    "test": "./test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@skicker.fi:~/repos/skicker-video-player.git"
+  },
+  "scripts": {
+    "test": "NODE_ENV=testing     node server.js",
+    "dev": "NODE_ENV=development node server.js",
+    "prod": "NODE_ENV=production WEBPACK_PUBLIC_PATH='./' node_modules/webpack/bin/webpack.js",
+    "compile": "tslint -p tsconfig.release.json -c tslint.yaml && tsc --project tsconfig.release.json",
+    "release": "npm run compile && /bin/bash builder/release.sh",
+    "publish:dev": "NODE_ENV=development node_modules/webpack/bin/webpack.js && scp dev/* skicker.fi:/var/www/html/videoplayer/dev/",
+    "publish:prod": "NODE_ENV=production WEBPACK_PUBLIC_PATH='./' node_modules/webpack/bin/webpack.js && scp dist/* skicker.fi:/var/www/html/videoplayer/",
+    "profile": "NODE_ENV=production WEBPACK_PUBLIC_PATH='./' node_modules/webpack/bin/webpack.js --config webpack.config.js --profile --json > profile.json"
+  },
+  "dependencies": {
+    "log4javascript": "^1.4.15",
+    "skicker-logger-manager": "git+ssh://git@skicker.fi:~/repos/skicker-logger-manager.git#0.0.6"
+  },
+  "devDependencies": {
+    "@types/jasmine": "^2.8.4",
+    "clean-webpack-plugin": "^0.1.17",
+    "copy-webpack-plugin": "^4.3.1",
+    "css-loader": "^0.28.8",
+    "express": "^4.16.2",
+    "file-loader": "^1.1.6",
+    "html-webpack-plugin": "^2.30.1",
+    "jasmine-core": "^2.8.0",
+    "json-loader": "^0.5.7",
+    "morgan": "^1.9.0",
+    "style-loader": "^0.19.1",
+    "ts-loader": "^3.2.0",
+    "tslint": "^5.9.1",
+    "tslint-loader": "^3.5.3",
+    "typescript": "^2.6.2",
+    "uglifyjs-webpack-plugin": "^1.1.6",
+    "webpack": "^3.10.0",
+    "webpack-dev-middleware": "^2.0.4",
+    "webpack-dev-server": "^2.11.0",
+    "webpack-hot-middleware": "^2.21.0",
+    "yaml-loader": "^0.5.0"
+  },
+  "private": true
+}
