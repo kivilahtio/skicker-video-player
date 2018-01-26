@@ -1,12 +1,8 @@
+import * as log4javascript from "log4javascript"; // Import log level constants
+import { LoggerManager } from "skicker-logger-manager";
 import "./app.css";
 
-import * as log4javascript from "log4javascript"; // Import log level constants
-import {LoggerManager} from "skicker-logger-manager";
-
 const loggerManager: LoggerManager = new LoggerManager(true);
-(window as any).logger = loggerManager.getLogger();
-(window as any).logger.error("Logging sucks!");
-
 loggerManager.setConfigurer("Skicker.Stepper", (logger) => {
   logger.setLevel(log4javascript.Level.ERROR);
 });

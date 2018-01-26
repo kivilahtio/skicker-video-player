@@ -1,10 +1,13 @@
-/* Maybe some day use dependency management for Jasmine
-require('../node_modules/jasmine-core/lib/jasmine-core/jasmine.css');
-require('../node_modules/jasmine-core/lib/jasmine-core/jasmine.js');
-require('../node_modules/jasmine-core/lib/jasmine-core/jasmine-html.js');
-require('../node_modules/jasmine-core/lib/jasmine-core/json2.js');
-require('../node_modules/jasmine-core/lib/jasmine-core/boot.js');
-*/
+/**
+ * This file is the entry point to loading test files to the browser tests.
+ * This module selects the test files to be included in the test build.
+ * By default it looks at the test/ -directory and includes all *.spec.js -files
+ *
+ * To pick only an individual test file for the browser testing, modify this file, not the build scripts!
+ */
+import { initLoggingSubsystem } from "./helpers/logger";
+initLoggingSubsystem();
+
 const requireAll = (requireContext: any) => { requireContext.keys().map(requireContext); };
 
 declare var require: any;

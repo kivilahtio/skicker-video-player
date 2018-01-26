@@ -1,21 +1,38 @@
 "use strict";
 
-import {LoggerManager} from "skicker-logger-manager";
+import * as $ from "jquery";
+import { VideoPlayer } from "../src/VideoPlayer";
+import * as dom from "./helpers/dom";
 
-const lm: LoggerManager = new LoggerManager(true);
+describe("Play a video from YouTube using a headless player", () => {
+  let videoPlayer: VideoPlayer;
+  let vpElement: Element = dom.appendBodyElement("div", "video-player");
 
-describe("A suite is just a function", () => {
-  let a: any;
+  describe("Create a new VideoPlayer", () => {
+    it("Instantiate a new VideoPlayer", () => {
+      videoPlayer = new VideoPlayer(vpElement);
 
-  it("and so is a spec", () => {
-    a = true;
+      expect(videoPlayer)
+      .toEqual(jasmine.any(VideoPlayer)); //videoPlayer is a VideoPlayer
+    });
+    it("VideoPlayer injected into the given HTML element", () => {
+      const htmlElementsCreated =
+        $(vpElement)
+        .find(".video-player-display")
+        .length;
 
-    expect(a).toBe(true);
+      expect(htmlElementsCreated)
+      .toBeGreaterThanOrEqual(1);
+    });
   });
 
-  it("and so is a specarrrr", () => {
-    a = true;
+  describe("Start the video", () => {
+    it("Play-action triggered", () => {
+      videoPlayer
+      .loadVideo(new URL("https://www.youtube.com/watch?v=nVRqq947lNo"));
+      //.startVideo();
 
-    expect(a).toBe(true);
+      //expect(videoPlayer).toBe(true);
+    });
   });
 });

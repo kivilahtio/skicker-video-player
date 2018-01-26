@@ -33,11 +33,14 @@
     "profile": "NODE_ENV=production WEBPACK_PUBLIC_PATH='./' node_modules/webpack/bin/webpack.js --config webpack.config.js --profile --json > profile.json"
   },
   "dependencies": {
+    "jquery": "^3.3.1",
     "log4javascript": "^1.4.15",
-    "skicker-logger-manager": "git+ssh://git@skicker.fi:~/repos/skicker-logger-manager.git#0.0.6"
+    "skicker-logger-manager": "git+ssh://git@skicker.fi:~/repos/skicker-logger-manager.git#0.0.6",
+    "youtube-player": "^5.4.0"
   },
   "devDependencies": {
     "@types/jasmine": "^2.8.4",
+    "@types/youtube": "0.0.31",
     "clean-webpack-plugin": "^0.1.17",
     "copy-webpack-plugin": "^4.3.1",
     "css-loader": "^0.28.8",
