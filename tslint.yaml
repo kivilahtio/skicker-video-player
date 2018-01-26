@@ -33,5 +33,7 @@ rules:
       - check-typecast
       - check-type-operator
       - check-preblock
+    prefer-function-over-method: false
+    no-inferrable-types: false #Doesn't want booleans to be explicitly typed. Conflicts with typedef-rule which forces booleans to be explicitly typed
 rulesDirectory: []
 
