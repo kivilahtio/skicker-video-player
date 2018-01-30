@@ -3,7 +3,10 @@
  * https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/youtube/index.d.ts is in tsconfig.json to make typings available
  */
 
-import { VideoAPI } from "../VideoAPI";
+import { VideoAPI, VideoPlayerStatus } from "../VideoAPI";
+
+import { MissingHandlerException } from "../Exception/MissingHandler";
+import { UnknownStateException } from "../Exception/UnknownState";
 
 import { log4javascript, LoggerManager } from "skicker-logger-manager";
 const logger: log4javascript.Logger = LoggerManager.getLogger("Skicker.VideoAPI.YouTubeVideo");
@@ -21,7 +24,7 @@ type YouTubeIFramePlayerEventHandler = (event: Event) => void;
 export class YouTubeVideo extends VideoAPI {
 
   // https://developers.google.com/youtube/iframe_api_reference#Events
-  public static ytPlayerStates: {[key: string]: string} = {
+  private static ytPlayerStates: {[key: string]: string} = {
     "-1": "unstarted",
     "0":  "ended",
     "1":  "playing",
@@ -36,6 +39,7 @@ export class YouTubeVideo extends VideoAPI {
     "video cued": "5",
   };
   private rootElement: Element;
+  private stateChangeHandlers: {[key: string]: (ytv: YouTubeVideo, event: YT.PlayerEvent) => void} = {};
   private ytPlayer: YT.Player;
   private ytPlayerOptions: YT.PlayerOptions;
 
@@ -51,6 +55,12 @@ export class YouTubeVideo extends VideoAPI {
     this.ytPlayerOptions = ytPlayerOptions;
   }
 
+  public getStatus(): VideoPlayerStatus {
+    const stateName: string = this.translatePlayerStateEnumToString(this.ytPlayer.getPlayerState());
+
+    return stateName as VideoPlayerStatus;
+  }
+
   public loadVideo(id?: string): Promise<YouTubeVideo> {
     logger.debug(`loadVideo():> params id=${id}`);
 
@@ -62,26 +72,44 @@ export class YouTubeVideo extends VideoAPI {
     }
 
     return this.initIFrameAPI()
-    .then((res: YouTubeVideo) => this.createPlayer())
-    .then((res: YouTubeVideo) => this.startVideo());
+    .then((res: YouTubeVideo) => this.createPlayer());
   }
 
   public startVideo(): Promise<YouTubeVideo> {
     logger.debug("startVideo():> ");
-    this.ytPlayer.playVideo();
 
     return new Promise<YouTubeVideo> ((resolve, reject): void => {
-
+      this.stateChangeHandlers.playing = (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
+        logger.debug("stateChangeHandlers.playing():> Play started");
+        resolve(this);
+      };
+      this.ytPlayer.playVideo();
     });
   }
 
   public stopVideo(): Promise<YouTubeVideo> {
     logger.debug("stopVideo():> ");
-    this.ytPlayer.stopVideo();
 
     return new Promise<YouTubeVideo> ((resolve, reject): void => {
-
+      this.stateChangeHandlers.unstarted = (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
+        logger.debug("stateChangeHandlers.unstarted():> Play unstarted(stopped)");
+        resolve(this);
+      };
+      this.ytPlayer.stopVideo();
     });
+  }
+
+  /**
+   * Translate a number-based enumeration to a human readable state. Useful for logging.
+   * @param state State received from the YT.Player.getPlayerState()
+   */
+  public translatePlayerStateEnumToString(state: YT.PlayerState): string {
+    if (YouTubeVideo.ytPlayerStates[state]) {
+
+      return YouTubeVideo.ytPlayerStates[state];
+    } else {
+      throw new UnknownStateException(`translatePlayerStateEnumToString():> Unknown state=${state}`);
+    }
   }
 
   /**
@@ -157,7 +185,7 @@ export class YouTubeVideo extends VideoAPI {
 
     // The API will call this function when the video player is ready.
     const onPlayerReady: YT.PlayerEventHandler<YT.PlayerEvent> = (event:YT.PlayerEvent): void => {
-      logger.debug(`onPlayerReady():> params state=${YouTubeVideo.ytPlayerStates[event.target.getPlayerState()]}, Promise resolved`);
+      logger.debug(`onPlayerReady():> params state=${this.translatePlayerStateEnumToString(event.target.getPlayerState())}, Promise resolved`);
       resolve(this);
     };
     // Inject the ready-handler to YT.Events
@@ -168,7 +196,14 @@ export class YouTubeVideo extends VideoAPI {
 
     // Inject the onPlayerStateChange-handler
     const onPlayerStateChange: YT.PlayerEventHandler<YT.OnStateChangeEvent> = (event: YT.OnStateChangeEvent): void => {
-      logger.debug(`onPlayerStateChange():> params state=${YouTubeVideo.ytPlayerStates[event.target.getPlayerState()]}`);
+      const stateName: string = this.translatePlayerStateEnumToString(event.target.getPlayerState());
+      if (this.stateChangeHandlers[stateName]) {
+        logger.debug(`onPlayerStateChange():> params state=${stateName}. Triggering stateChangeHandler`);
+        this.stateChangeHandlers[stateName](this, event);
+      } else {
+        logger.trace(`onPlayerStateChange():> No handler for state=${stateName}`);
+        // throw new MissingHandlerException(`onPlayerStateChange():> No handler for state=${stateName}`);
+      }
     };
     if (! this.ytPlayerOptions.events.onStateChange) {
       this.ytPlayerOptions.events.onStateChange = onPlayerStateChange;

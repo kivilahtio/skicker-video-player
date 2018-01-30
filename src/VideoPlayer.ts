@@ -1,6 +1,6 @@
 "use strict";
 
-import { SupportedVideoAPIs, VideoAPI } from "./VideoAPI";
+import { SupportedVideoAPIs, VideoAPI, VideoPlayerStatus } from "./VideoAPI";
 import { YouTubeVideo } from "./VideoAPI/YouTubeVideo";
 
 import { RegExpParsingException } from "./Exception/RegExpParsing";
@@ -22,6 +22,11 @@ export class VideoPlayer {
     this.rootElement = rootElement;
   }
 
+  public getStatus(): VideoPlayerStatus {
+    logger.debug(`getStatus():> returning ${this.videoAPI.getStatus()}`);
+
+    return this.videoAPI.getStatus();
+  }
   public getVideoAPI(): VideoAPI {
     logger.debug(`getVideoAPI():> returning ${this.videoAPI}`);
 
