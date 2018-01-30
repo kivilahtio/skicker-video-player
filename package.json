@@ -35,7 +35,7 @@
   "dependencies": {
     "jquery": "^3.3.1",
     "log4javascript": "^1.4.15",
-    "skicker-logger-manager": "git+ssh://git@skicker.fi:~/repos/skicker-logger-manager.git#0.0.6",
+    "skicker-logger-manager": "git+ssh://git@skicker.fi:~/repos/skicker-logger-manager.git#0.0.7",
     "youtube-player": "^5.4.0"
   },
   "devDependencies": {

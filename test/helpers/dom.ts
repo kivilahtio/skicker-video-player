@@ -8,9 +8,14 @@
  * @param className
  */
 
-export function appendBodyElement(typeName: string, className: string): Element {
+export function appendBodyElement(typeName: string, id?: string, className?: string): Element {
   const element: Element = document.createElement(typeName);
-  element.classList.add(className);
+  if (className) {
+    element.classList.add(className);
+  }
+  if (id) {
+    element.id = id;
+  }
   document.body.appendChild(element);
 
   return element;

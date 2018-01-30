@@ -14,5 +14,6 @@ export abstract class VideoAPI {
   private videoUrl: URL;
 
   public abstract loadVideo(id: string): Promise<VideoAPI>;
-  public abstract startVideo():void;
+  public abstract startVideo(): Promise<VideoAPI>;
+  public abstract stopVideo(): Promise<VideoAPI>;
 }
