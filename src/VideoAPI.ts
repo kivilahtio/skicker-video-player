@@ -20,10 +20,14 @@ export enum VideoPlayerStatus {
 export interface IVideoAPIOptions {
   /** Automatically start playing when player is ready */
   autoplay?: boolean;
+  /** Display controls or hide them */
+  controls?: boolean;
   /** estimated end time of the video in seconds */
   end?: number;
   /** Height of the plyer window in pixels */
   height?: number;
+  /** loop the video */
+  loop?: boolean;
   /** playback rate, eg. 1.0, 0.75, 2.5 */
   rate?: number;
   /** estimated start time of the video in seconds */

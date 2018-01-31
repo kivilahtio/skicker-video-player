@@ -40,6 +40,8 @@ const transformFormDataToIVideoAPIOptions = (data: any): IVideoAPIOptions => {
     rate:     Number(data.videoRate),
     volume:   Number(data.videoVolume),
     autoplay: Boolean(data.videoAutoPlay),
+    loop:     Boolean(data.videoLoop),
+    controls: Boolean(data.videoControls),
   };
 };
 

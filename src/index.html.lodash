@@ -73,6 +73,14 @@
           <input name="videoAutoPlay" type="checkbox" value="1">
         </div>
         <div>
+          <label for="videoLoop">Loop:</label>
+          <input name="videoLoop" type="checkbox" value="1">
+        </div>
+        <div>
+          <label for="videoControls">Controls:</label>
+          <input name="videoControls" type="checkbox" value="1">
+        </div>
+        <div>
           <input name="videoPlay" type="submit" value="Add player">
         </div>
       </fieldset>

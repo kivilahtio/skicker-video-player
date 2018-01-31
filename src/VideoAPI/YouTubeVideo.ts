@@ -361,14 +361,14 @@ export class YouTubeVideo extends VideoAPI {
         autoplay: (opts.autoplay) ? YT.AutoPlay.AutoPlay : YT.AutoPlay.NoAutoPlay,
         cc_load_policy: YT.ClosedCaptionsLoadPolicy.UserDefault,
         color: "white", // YT.ProgressBarColor = "red" | "white";
-        controls: YT.Controls.Hide,
+        controls: (opts.controls) ? YT.Controls.ShowLoadPlayer : YT.Controls.Hide,
         disablekb: YT.KeyboardControls.Disable,
         enablejsapi: YT.JsApi.Enable,
         end: opts.end || undefined,
         fs: YT.FullscreenButton.Show,
         hl: undefined, // Player language as an ISO 639-1 two-letter language code or fully-specified locale.
         iv_load_policy: YT.IvLoadPolicy.Hide,
-        loop: YT.Loop.Loop,
+        loop: (opts.loop) ? YT.Loop.Loop : YT.Loop.SinglePlay, // Doesn't work with end. Needs to be manually seekTo() to given start position.
         modestbranding: YT.ModestBranding.Full,
         playlist: undefined,
         playsinline: YT.PlaysInline.Fullscreen,
