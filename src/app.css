@@ -1,3 +1,17 @@
-div.hello {
-  color: red
+div.divider {
+  clear: both;
+}
+
+div#video-loading-form-container {
+  float: left;
+  width: 45%;
+}
+
+div#video-controls-container {
+  float: right;
+  width: 45%;
+}
+
+div.video-control {
+  float: left;
 }

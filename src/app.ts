@@ -43,6 +43,47 @@ const transformFormDataToIVideoAPIOptions = (data: any): IVideoAPIOptions => {
   };
 };
 
+const createVideoPlayerControl = (videoPlayer: VideoPlayer, i: number): void => {
+  // Clone the video control template and appendit to the video controller
+  const videoControl = $(".template-video-control").clone();
+  $("#video-controls-container")
+  .append(videoControl);
+
+  // Set id and title
+  $(videoControl)
+  .attr("id", `video-control-${i}`)
+  .children(".video-control-title")
+  .html($(videoControl)
+        .attr("id")
+  );
+
+  // Define handlers to control the video playback
+  const destroyHandler = (ev: MouseEvent): void => {
+    videoPlayer.destroy();
+    $(ev.target).remove();
+    $(videoControl).remove();
+  };
+  $(videoControl).children(".video-control-destroy").click(destroyHandler as any); // WTF? Argument of type '(ev: MouseEvent) => void' is not assignable to parameter of type 'MouseEvent'. Property 'altKey' is missing in type '(ev: MouseEvent) => void'.
+
+  const playHandler = (ev: MouseEvent): void => {
+    videoPlayer.startVideo()
+    .catch((err) => alert(err.toString()));
+  };
+  $(videoControl).children(".video-control-play").click(playHandler as any);
+
+  const stopHandler = (ev: MouseEvent): void => {
+    videoPlayer.stopVideo()
+    .catch((err) => alert(err.toString()));
+  };
+  $(videoControl).children(".video-control-stop").click(stopHandler as any);
+
+  const pauseHandler = (ev: MouseEvent): void => {
+    videoPlayer.pauseVideo()
+    .catch((err) => alert(err.toString()));
+  };
+  $(videoControl).children(".video-control-pause").click(pauseHandler as any);
+};
+
 /** Store the created video players here */
 const videoPlayers: VideoPlayer[] = [];
 
@@ -57,8 +98,9 @@ form.onsubmit = function(e) {
   });
   logger.debug("Form onsubmit():> Form data=", formData);
 
-  const videoPlayer: VideoPlayer = new VideoPlayer(dom.appendBodyElement("div", `skicker-video-player-${videoPlayers.length}`, "video-player"));
+  const videoPlayer: VideoPlayer = new VideoPlayer(dom.appendBodyElement("div", `video-player-${videoPlayers.length}`, "video-player"));
   videoPlayers.push(videoPlayer);
+  createVideoPlayerControl(videoPlayer, videoPlayers.length);
 
   videoPlayer.loadVideoFromURL(new URL(formData["videoUrl"]), transformFormDataToIVideoAPIOptions(formData))
   .catch((err: Error) => {

@@ -27,6 +27,18 @@ export class VideoPlayer {
     }
   }
 
+  /**
+   * Release this player and all assets to garbage collection (hopefully)
+   */
+  public destroy(): void {
+    logger.debug("destroy():> ");
+    this.videoAPI.destroy();
+    this.videoAPI = undefined;
+    $(this.rootElement)
+    .remove();
+    this.rootElement = undefined;
+  }
+
   public getStatus(): VideoPlayerStatus {
     logger.debug(`getStatus():> returning ${this.videoAPI.getStatus()}`);
 
@@ -73,6 +85,10 @@ export class VideoPlayer {
     this.parseURL(url); // Parses the url and stores the videoId and api type to this object.
 
     return this.loadVideo(this.videoId, this.api, options);
+  }
+
+  public pauseVideo(): Promise<VideoAPI> {
+    return this.videoAPI.pauseVideo();
   }
 
   public setPlaybackRate(rate: number): Promise<VideoAPI> {

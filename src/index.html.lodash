@@ -13,46 +13,75 @@
 </head>
 <body>
   <% if (htmlWebpackPlugin.options.NODE_ENV !== "testing") { %>
-  <form id="video-loading-form" action="#">
-    <fieldset>
-      <legend>Video Player</legend>
-      <div>
-        <label for="videoUrl">Video URL:</label>
-        <input name="videoUrl" type="url" placeholder="https://Video.URL" required autofocus>
+  <div id="templates-container" style="display: none;">
+    <div class="template-video-control">
+      <div class="video-control video-control-destroy">
+        [DESTROY]
       </div>
-      <div>
-        <label for="videoStart">Start:</label>
-        <input name="videoStart" type="numbers" placeholder="0">
+      <div class="video-control video-control-play">
+        [PLAY]
       </div>
-      <div>
-        <label for="videoEnd">End:</label>
-        <input name="videoEnd" type="numbers" placeholder="0">
+      <div class="video-control video-control-pause">
+        [PAUSE]
       </div>
-      <div>
-        <label for="videoRate">Playback Rate:</label>
-        <input name="videoRate" type="numbers" placeholder="1.0">
+      <div class="video-control video-control-stop">
+        [STOP]
       </div>
-      <div>
-        <label for="videoVolume">Volume:</label>
-        <input name="videoVolume" type="range" min="0" max="100" value="100">
+      <div class="video-control video-control-title">
+        TITLE
       </div>
-      <div>
-        <label for="videoWidth">Width:</label>
-        <input name="videoWidth" type="range" min="0" max="1024" value="320">
-      </div>
-      <div>
-        <label for="videoHeight">Height:</label>
-        <input name="videoHeight" type="range" min="0" max="1024" value="240">
-      </div>
-      <div>
-        <label for="videoAutoPlay">Auto play:</label>
-        <input name="videoAutoPlay" type="checkbox" value="1">
-      </div>
-      <div>
-        <input name="videoPlay" type="submit" value="Add player">
-      </div>
-    </fieldset>
-  </form>
+    </div>
+  </div>
+  <header>
+    <h4>Skicker video player demo</h4>
+  </header>
+  <div id="video-loading-form-container">
+    <form id="video-loading-form" action="#">
+      <fieldset>
+        <legend>Video Player</legend>
+        <div>
+          <label for="videoUrl">Video URL:</label>
+          <input name="videoUrl" type="url" placeholder="https://Video.URL" required autofocus>
+        </div>
+        <div>
+          <label for="videoStart">Start:</label>
+          <input name="videoStart" type="numbers" placeholder="0">
+        </div>
+        <div>
+          <label for="videoEnd">End:</label>
+          <input name="videoEnd" type="numbers" placeholder="0">
+        </div>
+        <div>
+          <label for="videoRate">Playback Rate:</label>
+          <input name="videoRate" type="numbers" placeholder="1.0">
+        </div>
+        <div>
+          <label for="videoVolume">Volume:</label>
+          <input name="videoVolume" type="range" min="0" max="100" value="100">
+        </div>
+        <div>
+          <label for="videoWidth">Width:</label>
+          <input name="videoWidth" type="range" min="0" max="1024" value="320">
+        </div>
+        <div>
+          <label for="videoHeight">Height:</label>
+          <input name="videoHeight" type="range" min="0" max="1024" value="240">
+        </div>
+        <div>
+          <label for="videoAutoPlay">Auto play:</label>
+          <input name="videoAutoPlay" type="checkbox" value="1">
+        </div>
+        <div>
+          <input name="videoPlay" type="submit" value="Add player">
+        </div>
+      </fieldset>
+    </form>
+  </div>
+  <div id="video-controls-container">
+
+  </div>
+  <div class="divider"></div>
+
   <% } %>
 </body>
 </html>

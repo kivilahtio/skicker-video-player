@@ -54,6 +54,20 @@ export class YouTubeVideo extends VideoAPI {
     }
   }
 
+  /**
+   * Delete this instance and kill all pending actions
+   */
+  public destroy(): void {
+    // Try to delete as much about anything that could lead to memory leaks.
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_Management
+    this.ytPlayer.destroy();
+    this.ytPlayer = undefined;
+    $(this.rootElement)
+    .remove();
+    this.rootElement = undefined;
+    this.ytPlayerOptions = undefined;
+  }
+
   public getPlaybackRate(): number {
     return this.ytPlayer.getPlaybackRate();
   }
@@ -81,6 +95,28 @@ export class YouTubeVideo extends VideoAPI {
       }
 
       return this.setPlaybackRate();
+    });
+  }
+
+  /**
+   * https://developers.google.com/youtube/iframe_api_reference#pauseVideo
+   */
+  public pauseVideo(): Promise<YouTubeVideo> {
+    logger.debug("pauseVideo():> ");
+
+    if (this.getStatus() === VideoPlayerStatus.ended ||
+        this.getStatus() === VideoPlayerStatus.paused) {
+      logger.info(`pauseVideo():> Video play already ${this.getStatus()}`);
+
+      return Promise.resolve(this);
+    }
+
+    return new Promise<YouTubeVideo> ((resolve, reject): void => {
+      this.stateChangeHandlers.paused = (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
+        logger.debug("stateChangeHandlers.paused():> Play paused");
+        resolve(this);
+      };
+      this.ytPlayer.pauseVideo();
     });
   }
 
@@ -289,6 +325,8 @@ export class YouTubeVideo extends VideoAPI {
     if (! this.ytPlayerOptions.events.onStateChange) {
       this.ytPlayerOptions.events.onStateChange = onPlayerStateChange;
     }
+
+    // Default onPlaybackRateChange handler
     const onPlaybackRateChange: YT.PlayerEventHandler<YT.OnPlaybackRateChangeEvent> = (event: YT.OnPlaybackRateChangeEvent): void => {
       const stateName: string = this.translatePlayerStateEnumToString(event.target.getPlayerState());
       if (this.stateChangeHandlers["onPlaybackRateChange"]) {
@@ -299,6 +337,14 @@ export class YouTubeVideo extends VideoAPI {
     };
     if (! this.ytPlayerOptions.events.onPlaybackRateChange) {
       this.ytPlayerOptions.events.onPlaybackRateChange = onPlaybackRateChange;
+    }
+
+    // Default onError() handler
+    const onError: YT.PlayerEventHandler<YT.OnErrorEvent> = (event: YT.OnErrorEvent): void => {
+      logger.error("onError():> ", event);
+    };
+    if (! this.ytPlayerOptions.events.onError) {
+      this.ytPlayerOptions.events.onError = onError;
     }
   }
 

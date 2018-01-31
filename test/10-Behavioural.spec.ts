@@ -103,6 +103,28 @@ describe("Play a video from YouTube using a headless player,", () => {
   );
   });
 
+  describe("Pause the video,", () => {
+    it("Pause-action triggered", () =>
+      videoPlayer
+      .pauseVideo()
+      .then(() => {
+        expect(videoPlayer.getStatus())
+        .toBe("paused");
+      }),
+    );
+  });
+
+  describe("Continue playing the video,", () => {
+    it("Play-action triggered", () =>
+      videoPlayer
+      .startVideo()
+      .then(() => {
+        expect(videoPlayer.getStatus())
+        .toBe("playing");
+      }),
+    );
+  });
+
   describe("Stop the video,", () => {
     it("Stop-action triggered", () =>
       videoPlayer
@@ -112,5 +134,15 @@ describe("Play a video from YouTube using a headless player,", () => {
         .toBe("unstarted");
       }),
     );
+  });
+
+  describe("Destroy the video player,", () => {
+    it("Destroy-action triggered", () => {
+      videoPlayer
+      .destroy();
+      expect($(vpElement)
+             .find("*").length)
+      .toBe(0);
+    });
   });
 });

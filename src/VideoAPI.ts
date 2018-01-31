@@ -42,10 +42,12 @@ export abstract class VideoAPI {
   private name: string;
   private videoUrl: URL;
 
+  public abstract destroy(): void;
   public abstract getPlaybackRate(): number;
   public abstract getStatus(): VideoPlayerStatus;
   public abstract getVolume(): number;
   public abstract loadVideo(videoId: string, options: IVideoAPIOptions): Promise<VideoAPI>;
+  public abstract pauseVideo(): Promise<VideoAPI>;
   public abstract setPlaybackRate(playbackRate: number): Promise<VideoAPI>;
   public abstract setVolume(volume: number): void;
   public abstract startVideo(): Promise<VideoAPI>;
