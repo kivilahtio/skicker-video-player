@@ -29,9 +29,8 @@ declare module '*.yaml' {
   const content: object;
   export default content;
 }
-
-/**
- * VideoAPI->YouTubeVideo -class injects a function to window.onYouTubeIframeAPIReady()
- */
-
-type PromiseResolver = (str: string)=>void;
+/*
+declare module 'deepmerge' {
+  export default function merge(x: object, y:object, options?:object): void;
+}
+*/

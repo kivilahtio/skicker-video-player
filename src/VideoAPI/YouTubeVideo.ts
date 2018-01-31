@@ -3,20 +3,15 @@
  * https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/youtube/index.d.ts is in tsconfig.json to make typings available
  */
 
-import { VideoAPI, VideoPlayerStatus } from "../VideoAPI";
+import { IVideoAPIOptions, VideoAPI, VideoPlayerStatus } from "../VideoAPI";
 
+import { BadPlaybackRateException } from "../Exception/BadPlaybackRate";
 import { MissingHandlerException } from "../Exception/MissingHandler";
 import { UnknownStateException } from "../Exception/UnknownState";
 
+import * as $ from "jquery";
 import { log4javascript, LoggerManager } from "skicker-logger-manager";
 const logger: log4javascript.Logger = LoggerManager.getLogger("Skicker.VideoAPI.YouTubeVideo");
-
-enum YouTubeIFramePlayerEvents {
-  onReady,
-  onStateChange,
-}
-
-type YouTubeIFramePlayerEventHandler = (event: Event) => void;
 
 /**
  * Implements the YouTube IFrame Video Player API, wrapping it into nice promises
@@ -38,6 +33,8 @@ export class YouTubeVideo extends VideoAPI {
     "buffering":  "3",
     "video cued": "5",
   };
+  private availablePlaybackRates: number[];
+  private options: IVideoAPIOptions;
   private rootElement: Element;
   private stateChangeHandlers: {[key: string]: (ytv: YouTubeVideo, event: YT.PlayerEvent) => void} = {};
   private ytPlayer: YT.Player;
@@ -48,11 +45,17 @@ export class YouTubeVideo extends VideoAPI {
    * @param rootElement Where to inject the IFrame Player?
    * @param ytPlayerOptions id must be given to satisfy Typing, but can be later overloaded with loadVideo()
    */
-  public constructor(rootElement: Element, ytPlayerOptions: YT.PlayerOptions) {
+  public constructor(rootElement: Element, options?: IVideoAPIOptions) {
     super();
-    logger.debug(`constructor():> params rootElement=${rootElement}, ytPlayerOptions=${ytPlayerOptions}`);
+    logger.debug(`constructor():> params rootElement=${rootElement}, options=`, options);
     this.rootElement = rootElement;
-    this.ytPlayerOptions = ytPlayerOptions;
+    if (options) {
+      this.options = options;
+    }
+  }
+
+  public getPlaybackRate(): number {
+    return this.ytPlayer.getPlaybackRate();
   }
 
   public getStatus(): VideoPlayerStatus {
@@ -61,18 +64,72 @@ export class YouTubeVideo extends VideoAPI {
     return stateName as VideoPlayerStatus;
   }
 
-  public loadVideo(id?: string): Promise<YouTubeVideo> {
-    logger.debug(`loadVideo():> params id=${id}`);
+  public getVolume(): number {
+    return this.ytPlayer.getVolume();
+  }
 
-    if (!(id) && !(this.ytPlayerOptions.videoId)) {
-      return Promise.reject("loadVideo():> No videoId found from the constructor() or given for the loadVideo()");
-    }
-    if (id) {
-      this.ytPlayerOptions.videoId = id;
-    }
+  public loadVideo(videoId:string, options: IVideoAPIOptions): Promise<YouTubeVideo> {
+    logger.debug(`loadVideo():> params videoId=${videoId}, options=`, options);
+
+    $.extend(true, this.options, options); // Merge options from the constructor with the new options, atleast the videoId must be given.
 
     return this.initIFrameAPI()
-    .then((res: YouTubeVideo) => this.createPlayer());
+    .then((res: YouTubeVideo) => this.createPlayer(videoId))
+    .then((res: YouTubeVideo) => {
+      if (this.options.volume) {
+        this.setVolume(this.options.volume);
+      }
+
+      return this.setPlaybackRate();
+    });
+  }
+
+  /**
+   * Sets the playback rate to the nearest available rate YouTube player supports.
+   *
+   * @param playbackRate Desired playback rate, if not given, value in this.options.rate is used.
+   */
+  public setPlaybackRate(playbackRate?: number): Promise<YouTubeVideo> {
+    const rate: number = playbackRate || this.options.rate;
+    if (rate) {
+      logger.debug(`setPlaybackRate():> params playbackRate=${playbackRate}, this.options.rate=${this.options.rate}`);
+
+      const oldRate: number = this.ytPlayer.getPlaybackRate();
+      if (rate === oldRate) {
+        logger.debug(`setPlaybackRate():> rate=${playbackRate} is the same as the current playback rate.`);
+
+        return Promise.resolve(this);
+      }
+
+      return new Promise<YouTubeVideo> ((resolve, reject): void => {
+
+        this.checkPlaybackRate(rate);
+
+        this.stateChangeHandlers.onPlaybackRateChange = (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
+          const newRate: number = this.ytPlayer.getPlaybackRate();
+          logger.debug(`stateChangeHandlers.onPlaybackRateChange():> Playback rate changed from ${oldRate} to ${newRate}. Requested ${rate}`);
+          resolve(this);
+        };
+        this.ytPlayer.setPlaybackRate(rate);
+      });
+    } else {
+      return Promise.resolve(this);
+    }
+  }
+
+  /**
+   * @param volume Volume level. 0 sets the player muted
+   */
+  public setVolume(volume: number): void {
+    logger.debug(`setVolume():> param volume=${volume}`);
+    if (volume === 0) {
+      this.ytPlayer.mute();
+    } else {
+      if (this.ytPlayer.isMuted()) {
+        this.ytPlayer.unMute();
+      }
+      this.ytPlayer.setVolume(volume);
+    }
   }
 
   public startVideo(): Promise<YouTubeVideo> {
@@ -108,21 +165,45 @@ export class YouTubeVideo extends VideoAPI {
 
       return YouTubeVideo.ytPlayerStates[state];
     } else {
-      throw new UnknownStateException(`translatePlayerStateEnumToString():> Unknown state=${state}`);
+      const msg: string = `translatePlayerStateEnumToString():> Unknown state=${state}`;
+      logger.fatal(msg);
+      throw new UnknownStateException(msg);
     }
   }
 
   /**
+   * Check if the desired rate is in the list of allowed playback rates, if not, raise an exception
+   *
+   * @param rate the new playback rate
+   * @throws BadPlaybackRateException if the given rate is not on the list of allowed playback rates
+   */
+  private checkPlaybackRate(rate: number): void {
+    if (! this.availablePlaybackRates) {
+      this.availablePlaybackRates = this.ytPlayer.getAvailablePlaybackRates();
+    }
+    if (! this.availablePlaybackRates.find(
+      (value: number, index: number, obj: number[]): boolean =>
+        value === rate,
+    )) {
+      const msg: string = `Trying to set playback rate ${rate}. This is not on the list of allowed playback rates ${this.availablePlaybackRates}`;
+      logger.fatal(msg);
+      throw new BadPlaybackRateException(msg);
+    }
+  }
+  /**
    * 3. This function creates an <iframe> (and YouTube player) after the API code downloads.
    */
-  private createPlayer(): Promise<YouTubeVideo> {
+  private createPlayer(videoId: string): Promise<YouTubeVideo> {
     if (! this.ytPlayer) {
       logger.debug("createPlayer():> Creating a new player");
 
       return new Promise<YouTubeVideo> ((resolve: (value:YouTubeVideo) => void, reject: (value:string) => void): void => {
-        this.injectDefaultHandlers(resolve, reject);
+        this.ytPlayerOptions = this.translateIVideoAPIOptionsToYTPlayerOptions(this.options);
+        this.ytPlayerOptions.videoId = videoId;
 
-        logger.debug("createPlayer():> elementId=", this.rootElement.id, "options=", this.ytPlayerOptions);
+        this.injectDefaultHandlers(resolve, reject); // This promise is resolved from the injected default onReady()-callback
+
+        logger.debug("createPlayer():> elementId=", this.rootElement.id, "ytPlayerOptions=", this.ytPlayerOptions);
         this.ytPlayer = new YT.Player(this.rootElement.id, this.ytPlayerOptions);
       });
     } else {
@@ -208,5 +289,45 @@ export class YouTubeVideo extends VideoAPI {
     if (! this.ytPlayerOptions.events.onStateChange) {
       this.ytPlayerOptions.events.onStateChange = onPlayerStateChange;
     }
+    const onPlaybackRateChange: YT.PlayerEventHandler<YT.OnPlaybackRateChangeEvent> = (event: YT.OnPlaybackRateChangeEvent): void => {
+      const stateName: string = this.translatePlayerStateEnumToString(event.target.getPlayerState());
+      if (this.stateChangeHandlers["onPlaybackRateChange"]) {
+        this.stateChangeHandlers["onPlaybackRateChange"](this, event);
+      } else {
+        logger.trace(`onPlaybackRateChange():> No handler for state=${stateName}`);
+      }
+    };
+    if (! this.ytPlayerOptions.events.onPlaybackRateChange) {
+      this.ytPlayerOptions.events.onPlaybackRateChange = onPlaybackRateChange;
+    }
+  }
+
+  private translateIVideoAPIOptionsToYTPlayerOptions(opts: IVideoAPIOptions): YT.PlayerOptions {
+    return {
+      width: opts.width || undefined,
+      height: opts.height || undefined,
+      videoId: "MISSING", // YT.PlayerOptions is tricky type, because we cannot easily precreate it without knowing the video id we are about to play.
+      playerVars: {
+        autohide: YT.AutoHide.HideAllControls,
+        autoplay: (opts.autoplay) ? YT.AutoPlay.AutoPlay : YT.AutoPlay.NoAutoPlay,
+        cc_load_policy: YT.ClosedCaptionsLoadPolicy.UserDefault,
+        color: "white", // YT.ProgressBarColor = "red" | "white";
+        controls: YT.Controls.Hide,
+        disablekb: YT.KeyboardControls.Disable,
+        enablejsapi: YT.JsApi.Enable,
+        end: opts.end || undefined,
+        fs: YT.FullscreenButton.Show,
+        hl: undefined, // Player language as an ISO 639-1 two-letter language code or fully-specified locale.
+        iv_load_policy: YT.IvLoadPolicy.Hide,
+        loop: YT.Loop.Loop,
+        modestbranding: YT.ModestBranding.Full,
+        playlist: undefined,
+        playsinline: YT.PlaysInline.Fullscreen,
+        rel: YT.RelatedVideos.Hide,
+        showinfo: YT.ShowInfo.Show,
+        start: opts.start || undefined,
+      },
+      //events?: {};
+    };
   }
 }

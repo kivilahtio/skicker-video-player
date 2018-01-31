@@ -1,6 +1,8 @@
 "use strict";
 
 import * as $ from "jquery";
+
+import { BadPlaybackRateException } from "../src/Exception/BadPlaybackRate";
 import { YouTubeVideo } from "../src/VideoAPI/YouTubeVideo";
 import { SupportedVideoAPIs, VideoAPI } from "../src/VideoAPI";
 import { VideoPlayer } from "../src/VideoPlayer";
@@ -34,7 +36,7 @@ describe("Play a video from YouTube using a headless player,", () => {
   describe("Load the video,", () => {
     it("Load-action triggered", () =>
       videoPlayer
-      .loadVideo(new URL("https://www.youtube.com/watch?v=nVRqq947lNo"))
+      .loadVideoFromURL(new URL("https://www.youtube.com/watch?v=nVRqq947lNo"))
       .then(() => {
         expect(true)
         .toBe(true);
@@ -67,6 +69,38 @@ describe("Play a video from YouTube using a headless player,", () => {
         .toBe("playing");
       }),
     );
+  });
+
+  describe("Change playback rate,", () => {
+    it("Setting a bad playback rate", () =>
+      videoPlayer.setPlaybackRate(55.5)
+      .then(() => {
+        expect("This should throw an exception")
+        .toEqual("But no exception was thrown");
+      })
+      .catch((err: Error) => {
+        expect(err)
+        .toEqual(jasmine.any(BadPlaybackRateException));
+        expect(err.message)
+        .toContain("This is not on the list of allowed playback rates");
+      }),
+    );
+
+    it("Setting an accepted playback rate", () =>
+      videoPlayer.setPlaybackRate(0.5)
+      .then(() => {
+        expect(videoPlayer.getVideoAPI().getPlaybackRate())
+        .toEqual(0.5);
+      }),
+    );
+
+    it("Setting the same rate accidentally again", () => // YouTube Player doesn't trigger the onPlaybackRateChange() callback in this case!
+    videoPlayer.setPlaybackRate(0.5)
+    .then(() => {
+      expect(videoPlayer.getVideoAPI().getPlaybackRate())
+      .toEqual(0.5);
+    }),
+  );
   });
 
   describe("Stop the video,", () => {

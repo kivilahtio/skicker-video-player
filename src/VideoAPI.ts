@@ -17,6 +17,23 @@ export enum VideoPlayerStatus {
   videoCued = "video cued",
 }
 
+export interface IVideoAPIOptions {
+  /** Automatically start playing when player is ready */
+  autoplay?: boolean;
+  /** estimated end time of the video in seconds */
+  end?: number;
+  /** Height of the plyer window in pixels */
+  height?: number;
+  /** playback rate, eg. 1.0, 0.75, 2.5 */
+  rate?: number;
+  /** estimated start time of the video in seconds */
+  start?: number;
+  /** volume from 0-100. 0 is mute */
+  volume?: number;
+  /** Width of the player window in pixels */
+  width?: number;
+}
+
 /**
  * Defines the interface for all video playing sources to implement
  */
@@ -25,8 +42,12 @@ export abstract class VideoAPI {
   private name: string;
   private videoUrl: URL;
 
+  public abstract getPlaybackRate(): number;
   public abstract getStatus(): VideoPlayerStatus;
-  public abstract loadVideo(id: string): Promise<VideoAPI>;
+  public abstract getVolume(): number;
+  public abstract loadVideo(videoId: string, options: IVideoAPIOptions): Promise<VideoAPI>;
+  public abstract setPlaybackRate(playbackRate: number): Promise<VideoAPI>;
+  public abstract setVolume(volume: number): void;
   public abstract startVideo(): Promise<VideoAPI>;
   public abstract stopVideo(): Promise<VideoAPI>;
 }
