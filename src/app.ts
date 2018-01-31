@@ -33,13 +33,13 @@ const logger: log4javascript.Logger = LoggerManager.getLogger("Skicker");
 
 const transformFormDataToIVideoAPIOptions = (data: any): IVideoAPIOptions => {
   return {
-    width: data.videoWidth,
-    height: data.videoHeight,
-    start: data.videoStart,
-    end: data.videoEnd,
-    rate: data.videoRate,
-    volume: data.videoVolume,
-    autoplay: data.videoAutoPlay,
+    width:    Number(data.videoWidth),
+    height:   Number(data.videoHeight),
+    start:    Number(data.videoStart),
+    end:      Number(data.videoEnd),
+    rate:     Number(data.videoRate),
+    volume:   Number(data.videoVolume),
+    autoplay: Boolean(data.videoAutoPlay),
   };
 };
 
@@ -89,7 +89,7 @@ const videoPlayers: VideoPlayer[] = [];
 
 const form: HTMLFormElement = document.getElementById("video-loading-form") as HTMLFormElement;
 form.onsubmit = function(e) {
-  logger.debug("Form onsubmit():> ", form);
+  logger.debug("Form onsubmit():> form=", form, "event=", e);
 
   const formDataAry: JQuery.NameValuePair[] = $(form).serializeArray();
   const formData: {[key: string]: string} = {};

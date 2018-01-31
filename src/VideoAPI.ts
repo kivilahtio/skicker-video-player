@@ -46,7 +46,7 @@ export abstract class VideoAPI {
   public abstract getPlaybackRate(): number;
   public abstract getStatus(): VideoPlayerStatus;
   public abstract getVolume(): number;
-  public abstract loadVideo(videoId: string, options: IVideoAPIOptions): Promise<VideoAPI>;
+  public abstract loadVideo(videoId: string, options?: IVideoAPIOptions): Promise<VideoAPI>;
   public abstract pauseVideo(): Promise<VideoAPI>;
   public abstract setPlaybackRate(playbackRate: number): Promise<VideoAPI>;
   public abstract setVolume(volume: number): void;

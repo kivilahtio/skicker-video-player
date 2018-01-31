@@ -34,7 +34,7 @@ export class YouTubeVideo extends VideoAPI {
     "video cued": "5",
   };
   private availablePlaybackRates: number[];
-  private options: IVideoAPIOptions;
+  private options: IVideoAPIOptions = {};
   private rootElement: Element;
   private stateChangeHandlers: {[key: string]: (ytv: YouTubeVideo, event: YT.PlayerEvent) => void} = {};
   private ytPlayer: YT.Player;
@@ -66,6 +66,7 @@ export class YouTubeVideo extends VideoAPI {
     .remove();
     this.rootElement = undefined;
     this.ytPlayerOptions = undefined;
+    this.options = undefined;
   }
 
   public getPlaybackRate(): number {
@@ -82,10 +83,12 @@ export class YouTubeVideo extends VideoAPI {
     return this.ytPlayer.getVolume();
   }
 
-  public loadVideo(videoId:string, options: IVideoAPIOptions): Promise<YouTubeVideo> {
+  public loadVideo(videoId:string, options?: IVideoAPIOptions): Promise<YouTubeVideo> {
     logger.debug(`loadVideo():> params videoId=${videoId}, options=`, options);
 
-    $.extend(true, this.options, options); // Merge options from the constructor with the new options, atleast the videoId must be given.
+    if (options) {
+      $.extend(true, this.options, options); // Merge options from the constructor with the new options, atleast the videoId must be given.
+    }
 
     return this.initIFrameAPI()
     .then((res: YouTubeVideo) => this.createPlayer(videoId))
