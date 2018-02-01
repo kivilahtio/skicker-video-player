@@ -15,3 +15,7 @@ div#video-controls-container {
 div.video-control {
   float: left;
 }
+
+input[name="videoUrl"] {
+  max-width: 500px;
+}

@@ -35,7 +35,7 @@ export class YouTubeVideo extends VideoAPI {
   };
   private availablePlaybackRates: number[];
   private options: IVideoAPIOptions = {};
-  private rootElement: Element;
+  private rootElement: HTMLElement;
   private stateChangeHandlers: {[key: string]: (ytv: YouTubeVideo, event: YT.PlayerEvent) => void} = {};
   private ytPlayer: YT.Player;
   private ytPlayerOptions: YT.PlayerOptions;
@@ -45,7 +45,7 @@ export class YouTubeVideo extends VideoAPI {
    * @param rootElement Where to inject the IFrame Player?
    * @param ytPlayerOptions id must be given to satisfy Typing, but can be later overloaded with loadVideo()
    */
-  public constructor(rootElement: Element, options?: IVideoAPIOptions) {
+  public constructor(rootElement: HTMLElement, options?: IVideoAPIOptions) {
     super();
     logger.debug(`constructor():> params rootElement=${rootElement}, options=`, options);
     this.rootElement = rootElement;
@@ -259,11 +259,11 @@ export class YouTubeVideo extends VideoAPI {
   private initIFrameAPI(): Promise<YouTubeVideo> {
     logger.debug("initIFrameAPI():> ");
     if (! document.getElementById("youtube-iframe_api")) {
-      const tag: Element = document.createElement("script");
+      const tag: HTMLElement = document.createElement("script");
 
       tag.setAttribute("src", "https://www.youtube.com/iframe_api");
       tag.setAttribute("id", "youtube-iframe_api");
-      const firstScriptTag: Element = document.getElementsByTagName("script")[0];
+      const firstScriptTag: HTMLElement = document.getElementsByTagName("script")[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
       return new Promise<YouTubeVideo> ((resolve: (value:YouTubeVideo) => void, reject: (value:string) => void): void => {

@@ -1,11 +1,13 @@
-+>---------------------<+
-| Skicker LoggerManager |
-+>---------------------<+
++>-------------------<+
+| Skicker VideoPlayer |
++>-------------------<+
 
-Logger configurer for the excellent log4javascript.
-Creates loggers on demand from given configurations.
-
-see. src/Skicker/LoggerManager.ts for usage example
+Video player to integrate multiple video sources
+- YouTube
+- static web link
+- Vimeo
+- etc.
+under a unified API designed to be used from a Stave.
 
 
 
@@ -15,8 +17,7 @@ see. src/Skicker/LoggerManager.ts for usage example
 
 Tested on node versions:
 
-    v9.3.0 - 2018.01.17
-    v8.9.4 - 2018.01.17
+    v9.3.0 - 2018.02.01
 
 
 
@@ -27,7 +28,7 @@ Tested on node versions:
 Execute
 
     npm install
-    npm run dev
+    npm run dev:srv
 
 to install missing dependencies and start a dev-server.
 
@@ -49,7 +50,7 @@ To distribute an updated version of this module, do the following:
 
 Start test runner server
 
-    npm run test
+    npm run test:srv
 
 Go to localhost:5001
 And verify that all test pass in the jasmine-html reporter
@@ -58,7 +59,7 @@ Fix broken tests
 
 2. Package for distribution
 
-    npm run compile
+    npm run release:compile
 
 3. Commit changes to Git
 
@@ -74,7 +75,12 @@ Fix broken tests
 | Using the dependency in another module |
 +>--------------------------------------<+
 
-    npm install -S "git+ssh://git@skicker.fi:~/repos/skicker-logger-manager.git"
+    npm install -S "git+ssh://git@skicker.fi:~/repos/skicker-video-player.git"
 
 You probably need to input your ssh-key passphrase to proceed.
+You should register your ssh-key to your ssh-agent
+
+    ssh-add
+
+to make using the Skicker Git-server more comfortable
 

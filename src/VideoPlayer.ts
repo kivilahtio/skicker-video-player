@@ -10,16 +10,29 @@ import * as $ from "jquery";
 import { log4javascript, LoggerManager } from "skicker-logger-manager";
 const logger: log4javascript.Logger = LoggerManager.getLogger("Skicker.VideoPlayer");
 
+/**
+ * Front-end to interface with multiple video playing sources.
+ * Most actions return a Promise. This way it is very easy to handle exceptions and take action when the Promise
+ * is resolved (action has succeeded/failed).
+ *
+ * eg.
+ * videoPlayer.startVideo().then(() => {alert("success")}).catch((err) => {alert(err.toString())})
+ */
 export class VideoPlayer {
 
   private api: SupportedVideoAPIs;
   private options: IVideoAPIOptions = {};
-  private rootElement: Element;
+  private rootElement: HTMLElement;
   private videoAPI: VideoAPI;
   private videoId: string;
   private youTubeURLParsingRegexp: RegExp = /[&?]v=(\w+)(?:\?|$)/;
 
-  public constructor(rootElement: Element, options?: IVideoAPIOptions) {
+  /**
+   *
+   * @param rootElement Inject the video player here
+   * @param options
+   */
+  public constructor(rootElement: HTMLElement, options?: IVideoAPIOptions) {
     logger.debug(`constructor():> params rootElement=${rootElement})`);
     this.rootElement = rootElement;
     if (options) {
@@ -39,16 +52,27 @@ export class VideoPlayer {
     this.rootElement = undefined;
   }
 
+  /**
+   * Gets the status of the current video player implementation
+   */
   public getStatus(): VideoPlayerStatus {
     logger.debug(`getStatus():> returning ${this.videoAPI.getStatus()}`);
 
     return this.videoAPI.getStatus();
   }
+
+  /**
+   * Returns the video API implementation
+   */
   public getVideoAPI(): VideoAPI {
     logger.debug(`getVideoAPI():> returning ${this.videoAPI}`);
 
     return this.videoAPI;
   }
+
+  /**
+   * Returns the ID of the video being played
+   */
   public getVideoId(): string {
     logger.debug(`getVideoId():> returning ${this.videoId}`);
 
@@ -56,6 +80,7 @@ export class VideoPlayer {
   }
 
   /**
+   * Prepares a video for playing.
    * @param id Video id of the remote service
    * @param api A supported video source API name. You can try casting a dynamic variable using "let api: SupportedVideoAPIs = SupportedVideoAPIs['YouTube'];"
    * @param options Options to pass to the video player implementation
@@ -74,10 +99,12 @@ export class VideoPlayer {
   }
 
   /**
-   * Loads a video into the given root element from a remote service.
+   * Prepares a video for playing. The video source and id is parsed from the URL.
    *
    * @param url Full URL to the video source.
    * @param options Options to pass to the video player implementation
+   * @throws UnknownVideoSourceException if the video source is not supported
+   * @throws BadParameterException if the URL is missing some important parameter
    */
   public loadVideoFromURL(url: URL, options?: IVideoAPIOptions): Promise<VideoAPI> {
     logger.debug(`loadVideoFromURL():> params url=${url}, options=${options || {}}`);
@@ -127,6 +154,8 @@ export class VideoPlayer {
    * such as the video id
    *
    * @param url The URL of the video to be played
+   * @throws UnknownVideoSourceException if the video source is not supported
+   * @throws BadParameterException if the URL is missing some important parameter
    */
   private parseURL(url: URL): SupportedVideoAPIs {
     logger.debug(`parseURL():> params url=${url}`);

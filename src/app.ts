@@ -1,3 +1,17 @@
+/**
+ * In this demo!
+ *
+ * Creates new video players from form submissions (see. ./index.html.lodash)
+ * 1. Receives constructor parameters from form submissions
+ * 2. Transforms them to valid video player options
+ * 3. Creates the video player from the valid options
+ * 4. Creates a control panel to test video player supported actions.
+ * 5. Load the video to the video player.
+ *    (You can start playing by manually clicking the video, or by checking the autoplay-checkbox)
+ * 6. Destroys video player instances on demand.
+ */
+
+
 import * as $ from "jquery";
 import { log4javascript, LoggerManager } from "skicker-logger-manager";
 import "./app.css";
@@ -5,6 +19,9 @@ import "./app.css";
 import { IVideoAPIOptions, VideoAPI } from "./VideoAPI";
 import { VideoPlayer } from "./VideoPlayer";
 
+/*
+ * Initiate the logging subsystem. See the developer console to track what happens inside the video player.
+ */
 const initLoggers = (): void => {
   LoggerManager.init(false);
 
@@ -29,6 +46,7 @@ initLoggers();
 const logger: log4javascript.Logger = LoggerManager.getLogger("Skicker");
 
 
+/* 2. Transform form submission to video player options */
 const transformFormDataToIVideoAPIOptions = (data: any): IVideoAPIOptions => {
   return {
     width:    Number(data.videoWidth),
@@ -43,6 +61,7 @@ const transformFormDataToIVideoAPIOptions = (data: any): IVideoAPIOptions => {
   };
 };
 
+/* 4. Create the control panel for the video player */
 const createVideoPlayerControl = (videoPlayer: VideoPlayer, i: number): void => {
   // Clone the video control template and appendit to the video controller
   const videoControl = $(".template-video-control")
@@ -61,6 +80,7 @@ const createVideoPlayerControl = (videoPlayer: VideoPlayer, i: number): void => 
   );
 
   // Define handlers to control the video playback
+  /* 6. Destroy the video player */
   const destroyHandler = (ev: MouseEvent): void => {
     videoPlayer.destroy();
     $(ev.target).remove();
@@ -90,10 +110,14 @@ const createVideoPlayerControl = (videoPlayer: VideoPlayer, i: number): void => 
 /** Store the created video players here */
 const videoPlayers: VideoPlayer[] = [];
 
+/*
+ * Main bread and butter of this demo! This is where it starts.
+ */
 const form: HTMLFormElement = document.getElementById("video-loading-form") as HTMLFormElement;
 form.onsubmit = function(e) {
   logger.debug("Form onsubmit():> form=", form, "event=", e);
 
+  /* 1. Receive video player parameters from form submission */
   const formDataAry: JQuery.NameValuePair[] = $(form).serializeArray();
   const formData: {[key: string]: string} = {};
   formDataAry.forEach((value: JQuery.NameValuePair, index: number, array: JQuery.NameValuePair[]) => {
@@ -101,7 +125,7 @@ form.onsubmit = function(e) {
   });
   logger.debug("Form onsubmit():> Form data=", formData);
 
-  // Create the video player container and the video player
+  /* 3. Create the video player container and the video player */
   const vpElement: HTMLElement = $("<div/>", {
     class: "video-player",
     id: `video-player-${videoPlayers.length}`,
@@ -111,10 +135,12 @@ form.onsubmit = function(e) {
   videoPlayers.push(videoPlayer);
   createVideoPlayerControl(videoPlayer, videoPlayers.length);
 
+  /* 5. Prepare the video for display */
   videoPlayer.loadVideoFromURL(new URL(formData["videoUrl"]), transformFormDataToIVideoAPIOptions(formData))
   .catch((err: Error) => {
     alert(`VideoPlayer.loadVideoFromURL() threw an error?\n${err.toString()}`);
   });
 
+  e.preventDefault();
   return false; // Prevent submitting the form to prevent a page reload
 };

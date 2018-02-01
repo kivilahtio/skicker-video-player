@@ -42,7 +42,7 @@
         <legend>Video Player</legend>
         <div>
           <label for="videoUrl">Video URL:</label>
-          <input name="videoUrl" type="url" placeholder="https://Video.URL" required autofocus>
+          <input name="videoUrl" type="url" value="https://www.youtube.com/watch?v=duQ9_578RKw" required autofocus>
         </div>
         <div>
           <label for="videoStart">Start:</label>
