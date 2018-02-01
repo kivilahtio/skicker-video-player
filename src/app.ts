@@ -2,8 +2,6 @@ import * as $ from "jquery";
 import { log4javascript, LoggerManager } from "skicker-logger-manager";
 import "./app.css";
 
-import * as dom from "../test/helpers/dom";
-
 import { IVideoAPIOptions, VideoAPI } from "./VideoAPI";
 import { VideoPlayer } from "./VideoPlayer";
 
@@ -47,7 +45,10 @@ const transformFormDataToIVideoAPIOptions = (data: any): IVideoAPIOptions => {
 
 const createVideoPlayerControl = (videoPlayer: VideoPlayer, i: number): void => {
   // Clone the video control template and appendit to the video controller
-  const videoControl = $(".template-video-control").clone();
+  const videoControl = $(".template-video-control")
+  .clone()
+  .removeClass("template-video-control");
+
   $("#video-controls-container")
   .append(videoControl);
 
@@ -100,7 +101,13 @@ form.onsubmit = function(e) {
   });
   logger.debug("Form onsubmit():> Form data=", formData);
 
-  const videoPlayer: VideoPlayer = new VideoPlayer(dom.appendBodyElement("div", `video-player-${videoPlayers.length}`, "video-player"));
+  // Create the video player container and the video player
+  const vpElement: HTMLElement = $("<div/>", {
+    class: "video-player",
+    id: `video-player-${videoPlayers.length}`,
+  })[0];
+  $(vpElement).appendTo("body");
+  const videoPlayer: VideoPlayer = new VideoPlayer(vpElement);
   videoPlayers.push(videoPlayer);
   createVideoPlayerControl(videoPlayer, videoPlayers.length);
 

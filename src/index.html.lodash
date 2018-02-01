@@ -46,15 +46,15 @@
         </div>
         <div>
           <label for="videoStart">Start:</label>
-          <input name="videoStart" type="numbers" placeholder="0">
+          <input name="videoStart" type="numbers" placeholder="0" size="5">
         </div>
         <div>
           <label for="videoEnd">End:</label>
-          <input name="videoEnd" type="numbers" placeholder="0">
+          <input name="videoEnd" type="numbers" placeholder="0" size="5">
         </div>
         <div>
           <label for="videoRate">Playback Rate:</label>
-          <input name="videoRate" type="numbers" placeholder="1.0">
+          <input name="videoRate" type="numbers" placeholder="1.0" size="3">
         </div>
         <div>
           <label for="videoVolume">Volume:</label>
