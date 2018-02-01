@@ -21,9 +21,9 @@ yarn-debug.log*
 yarn-error.log*
 
 compiled/
-dist/
-dev/
-dev-test/
+dist/dev
+dist/test
+dist/prod
 *.swp
 src/**/*.js
 src/**/*.js.map
