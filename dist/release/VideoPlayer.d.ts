@@ -1,4 +1,12 @@
 import { IVideoAPIOptions, SupportedVideoAPIs, VideoAPI, VideoPlayerStatus } from "./VideoAPI";
+/**
+ * Front-end to interface with multiple video playing sources.
+ * Most actions return a Promise. This way it is very easy to handle exceptions and take action when the Promise
+ * is resolved (action has succeeded/failed).
+ *
+ * eg.
+ * videoPlayer.startVideo().then(() => {alert("success")}).catch((err) => {alert(err.toString())})
+ */
 export declare class VideoPlayer {
     private api;
     private options;
@@ -6,25 +14,42 @@ export declare class VideoPlayer {
     private videoAPI;
     private videoId;
     private youTubeURLParsingRegexp;
-    constructor(rootElement: Element, options?: IVideoAPIOptions);
+    /**
+     *
+     * @param rootElement Inject the video player here
+     * @param options
+     */
+    constructor(rootElement: HTMLElement, options?: IVideoAPIOptions);
     /**
      * Release this player and all assets to garbage collection (hopefully)
      */
     destroy(): void;
+    /**
+     * Gets the status of the current video player implementation
+     */
     getStatus(): VideoPlayerStatus;
+    /**
+     * Returns the video API implementation
+     */
     getVideoAPI(): VideoAPI;
+    /**
+     * Returns the ID of the video being played
+     */
     getVideoId(): string;
     /**
+     * Prepares a video for playing.
      * @param id Video id of the remote service
      * @param api A supported video source API name. You can try casting a dynamic variable using "let api: SupportedVideoAPIs = SupportedVideoAPIs['YouTube'];"
      * @param options Options to pass to the video player implementation
      */
     loadVideo(id: string, api: SupportedVideoAPIs, options?: IVideoAPIOptions): Promise<VideoAPI>;
     /**
-     * Loads a video into the given root element from a remote service.
+     * Prepares a video for playing. The video source and id is parsed from the URL.
      *
      * @param url Full URL to the video source.
      * @param options Options to pass to the video player implementation
+     * @throws UnknownVideoSourceException if the video source is not supported
+     * @throws BadParameterException if the URL is missing some important parameter
      */
     loadVideoFromURL(url: URL, options?: IVideoAPIOptions): Promise<VideoAPI>;
     pauseVideo(): Promise<VideoAPI>;
@@ -37,6 +62,8 @@ export declare class VideoPlayer {
      * such as the video id
      *
      * @param url The URL of the video to be played
+     * @throws UnknownVideoSourceException if the video source is not supported
+     * @throws BadParameterException if the URL is missing some important parameter
      */
     private parseURL(url);
 }

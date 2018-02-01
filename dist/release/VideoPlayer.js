@@ -7,7 +7,20 @@ const UnknownVideoSource_1 = require("./Exception/UnknownVideoSource");
 const $ = require("jquery");
 const skicker_logger_manager_1 = require("skicker-logger-manager");
 const logger = skicker_logger_manager_1.LoggerManager.getLogger("Skicker.VideoPlayer");
+/**
+ * Front-end to interface with multiple video playing sources.
+ * Most actions return a Promise. This way it is very easy to handle exceptions and take action when the Promise
+ * is resolved (action has succeeded/failed).
+ *
+ * eg.
+ * videoPlayer.startVideo().then(() => {alert("success")}).catch((err) => {alert(err.toString())})
+ */
 class VideoPlayer {
+    /**
+     *
+     * @param rootElement Inject the video player here
+     * @param options
+     */
     constructor(rootElement, options) {
         this.options = {};
         this.youTubeURLParsingRegexp = /[&?]v=(\w+)(?:\?|$)/;
@@ -28,19 +41,29 @@ class VideoPlayer {
             .remove();
         this.rootElement = undefined;
     }
+    /**
+     * Gets the status of the current video player implementation
+     */
     getStatus() {
         logger.debug(`getStatus():> returning ${this.videoAPI.getStatus()}`);
         return this.videoAPI.getStatus();
     }
+    /**
+     * Returns the video API implementation
+     */
     getVideoAPI() {
         logger.debug(`getVideoAPI():> returning ${this.videoAPI}`);
         return this.videoAPI;
     }
+    /**
+     * Returns the ID of the video being played
+     */
     getVideoId() {
         logger.debug(`getVideoId():> returning ${this.videoId}`);
         return this.videoId;
     }
     /**
+     * Prepares a video for playing.
      * @param id Video id of the remote service
      * @param api A supported video source API name. You can try casting a dynamic variable using "let api: SupportedVideoAPIs = SupportedVideoAPIs['YouTube'];"
      * @param options Options to pass to the video player implementation
@@ -56,10 +79,12 @@ class VideoPlayer {
         return this.videoAPI.loadVideo(this.videoId, this.options);
     }
     /**
-     * Loads a video into the given root element from a remote service.
+     * Prepares a video for playing. The video source and id is parsed from the URL.
      *
      * @param url Full URL to the video source.
      * @param options Options to pass to the video player implementation
+     * @throws UnknownVideoSourceException if the video source is not supported
+     * @throws BadParameterException if the URL is missing some important parameter
      */
     loadVideoFromURL(url, options) {
         logger.debug(`loadVideoFromURL():> params url=${url}, options=${options || {}}`);
@@ -96,6 +121,8 @@ class VideoPlayer {
      * such as the video id
      *
      * @param url The URL of the video to be played
+     * @throws UnknownVideoSourceException if the video source is not supported
+     * @throws BadParameterException if the URL is missing some important parameter
      */
     parseURL(url) {
         logger.debug(`parseURL():> params url=${url}`);

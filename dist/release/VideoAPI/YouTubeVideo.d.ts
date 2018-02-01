@@ -20,7 +20,7 @@ export declare class YouTubeVideo extends VideoAPI {
      * @param rootElement Where to inject the IFrame Player?
      * @param ytPlayerOptions id must be given to satisfy Typing, but can be later overloaded with loadVideo()
      */
-    constructor(rootElement: Element, options?: IVideoAPIOptions);
+    constructor(rootElement: HTMLElement, options?: IVideoAPIOptions);
     /**
      * Delete this instance and kill all pending actions
      */
