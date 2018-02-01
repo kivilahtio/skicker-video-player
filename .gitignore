@@ -31,4 +31,3 @@ test/**/*.js
 test/**/*.js.map
 
 profile.json
-release/
