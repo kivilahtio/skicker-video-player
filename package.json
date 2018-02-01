@@ -23,13 +23,18 @@
     "url": "git@skicker.fi:~/repos/skicker-video-player.git"
   },
   "scripts": {
-    "test": "NODE_ENV=testing     node server.js",
-    "dev": "NODE_ENV=development node server.js",
+    "test": "NODE_ENV=testing node_modules/webpack/bin/webpack.js",
+    "test:srv": "NODE_ENV=testing     node server.js",
+    "dev": "NODE_ENV=development node_modules/webpack/bin/webpack.js",
+    "dev:srv": "NODE_ENV=development node server.js",
     "prod": "NODE_ENV=production WEBPACK_PUBLIC_PATH='./' node_modules/webpack/bin/webpack.js",
-    "compile": "tslint -p tsconfig.release.json -c tslint.yaml && tsc --project tsconfig.release.json",
-    "release": "npm run compile && /bin/bash builder/release.sh",
-    "publish:dev": "NODE_ENV=development node_modules/webpack/bin/webpack.js && scp dev/* skicker.fi:/var/www/html/videoplayer/dev/",
-    "publish:prod": "NODE_ENV=production WEBPACK_PUBLIC_PATH='./' node_modules/webpack/bin/webpack.js && scp dist/* skicker.fi:/var/www/html/videoplayer/",
+    "prod:srv": "NODE_ENV=production node server.js",
+    "release:compile": "tslint -p tsconfig.release.json -c tslint.yaml && tsc --project tsconfig.release.json",
+    "release": "npm run release:compile && /bin/bash builder/release.sh",
+    "publish:dev": "npm run dev && scp dist/dev/* skicker.fi:/var/www/html/videoplayer/dev/",
+    "publish:test": "npm run test && scp -r dist/test/* skicker.fi:/var/www/html/videoplayer/test/",
+    "publish:prod": "npm run prod && scp dist/prod/* skicker.fi:/var/www/html/videoplayer/",
+    "publish": "npm run publish:dev && npm run publish:test && npm run publish:prod",
     "profile": "NODE_ENV=production WEBPACK_PUBLIC_PATH='./' node_modules/webpack/bin/webpack.js --config webpack.config.js --profile --json > profile.json"
   },
   "dependencies": {

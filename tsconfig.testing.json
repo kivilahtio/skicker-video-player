@@ -1,11 +1,8 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/release",
-    "declaration": true,
+    "outDir": "./dist/test",
+    "declaration": false,
     "sourceMap": true
   },
-  "exclude": [
-    "./test"
-  ]
 }

@@ -21,17 +21,17 @@ var entry;
 switch (NODE_ENV) {
   case "production":
     title = "Skicker Video Player";
-    buildDir = "./dist";
+    buildDir = "./dist/prod";
     entry = {
       app:     './src/app.ts',
     };
     sourceMap = false;
-    ts_configFile = "tsconfig.release.json";
+    ts_configFile = "tsconfig.production.json";
     break;
 
   case "development":
     title = "Skicker Video Player Development";
-    buildDir = "./dev";
+    buildDir = "./dist/dev";
     entry = {
       app: [
         './src/app.ts',
@@ -39,12 +39,12 @@ switch (NODE_ENV) {
       ]
     };
     sourceMap = true;
-    ts_configFile = "tsconfig.json";
+    ts_configFile = "tsconfig.development.json";
     break;
 
   case "testing":
     title = "Skicker Video Player Testing";
-    buildDir = "./dev-test";
+    buildDir = "./dist/test";
     entry = {
       tests: [
         './test/specRoot.ts',
@@ -52,7 +52,7 @@ switch (NODE_ENV) {
       ]
     };
     sourceMap = true;
-    ts_configFile = "tsconfig.json";
+    ts_configFile = "tsconfig.testing.json";
     break;
 
   default:
