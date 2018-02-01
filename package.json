@@ -12,8 +12,8 @@
   "contributors": [
     "Jouni Huovinen <jouni.huovinen@gmail.com>"
   ],
-  "main": "release/videoplayer.js",
-  "typings": "release/videoplayer.d.ts",
+  "main": "release/src/VideoPlayer.js",
+  "typings": "release/src/VideoPlayer.d.ts",
   "directories": {
     "lib": "./src",
     "test": "./test"

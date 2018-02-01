@@ -13,9 +13,8 @@
     "moduleResolution": "Node"
   },
   "include": [
-    "source/**/*",
-    "test/**/*",
-    "node_modules/@types/youtube/index.d.ts"
+    "src/**/*",
+    "test/**/*"
   ]
 }
 
