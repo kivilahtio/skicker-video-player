@@ -139,6 +139,17 @@ export class YouTubeVideo extends VideoAPI {
     });
   }
 
+  public playOrPauseVideo(): Promise<YouTubeVideo> {
+    logger.debug("playOrPauseVideo():> ");
+    if (this.ytPlayer === undefined) {
+      return Promise.reject(new UnknownStateException("YouTube Player not instantiated"));
+    } else if (this.getStatus() === VideoPlayerStatus.playing) {
+      return this.pauseVideo();
+    } else {
+      return this.startVideo();
+    }
+  }
+
   /**
    *  Seeking is a bit tricky since we need to be in the proper state. Otherwise we get strange errors and behaviour from YouTube Player.
    *  If not in playing or paused -states, forcibly move there.

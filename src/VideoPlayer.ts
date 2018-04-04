@@ -120,6 +120,10 @@ export class VideoPlayer {
     return this.videoAPI.pauseVideo();
   }
 
+  public playOrPauseVideo(): Promise<VideoAPI> {
+    return this.videoAPI.playOrPauseVideo();
+  }
+
   public seekVideo(position: number): Promise<VideoAPI> {
     return this.videoAPI.seekVideo(position);
   }

@@ -56,6 +56,7 @@ export abstract class VideoAPI {
   public abstract getVolume(): number;
   public abstract loadVideo(videoId: string, options?: IVideoAPIOptions): Promise<VideoAPI>;
   public abstract pauseVideo(): Promise<VideoAPI>;
+  public abstract playOrPauseVideo(): Promise<VideoAPI>;
   /**
    * @param position time in seconds where to seek to? Use decimals to reach millisecond precision.
    */
