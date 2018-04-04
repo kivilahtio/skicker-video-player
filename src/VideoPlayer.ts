@@ -110,9 +110,15 @@ export class VideoPlayer {
                                                "This is typically parsed from the base of the video url."));
     }
 
-    this.videoAPI = this.createVideoAPI();
+    if (this.videoAPI === undefined) {
+      this.videoAPI = this.createVideoAPI();
 
-    return this.videoAPI.loadVideo(this.videoId, this.options);
+      return this.videoAPI.loadVideo(this.videoId, this.options);
+    } else {
+      logger.debug(`loadVideo():> Video already loaded, not loading it again, for videoId=${id}, api=${api}`);
+
+      return Promise.resolve(this.videoAPI);
+    }
   }
 
   /**
