@@ -69,8 +69,24 @@ export class YouTubeVideo extends VideoAPI {
     this.options = undefined;
   }
 
+  public getDuration(): number | undefined {
+    if (this.ytPlayer) {
+      return this.ytPlayer.getDuration();
+    }
+
+    return undefined;
+  }
+
   public getPlaybackRate(): number {
     return this.ytPlayer.getPlaybackRate();
+  }
+
+  public getPosition(): number | undefined {
+    if (this.ytPlayer) {
+      return this.ytPlayer.getCurrentTime();
+    }
+
+    return undefined;
   }
 
   public getStatus(): VideoPlayerStatus {
@@ -121,6 +137,36 @@ export class YouTubeVideo extends VideoAPI {
       };
       this.ytPlayer.pauseVideo();
     });
+  }
+
+  /**
+   *  Seeking is a bit tricky since we need to be in the proper state. Otherwise we get strange errors and behaviour from YouTube Player.
+   *  If not in playing or paused -states, forcibly move there.
+   */
+  public seekVideo(position: number): Promise<YouTubeVideo> {
+    const status: VideoPlayerStatus = this.getStatus();
+    logger.debug("seekVideo():> position:", position, "status:", status);
+
+    if (status === VideoPlayerStatus.paused || status === VideoPlayerStatus.playing || status === VideoPlayerStatus.buffering) {
+      //These statuses are ok to seek from
+      return this._seekVideo(position);
+    } else {
+      if (this.ytPlayer === undefined) {
+        return Promise.reject("YouTube player not loaded with a video yet. Cannot seek before loading a video.");
+      }
+
+      //These statuses are not ok. Mute+Play+Pause to get into the desired position to be able to seek.
+      const oldVol: number = this.getVolume();
+      this.setVolume(0);
+
+      return this.startVideo()
+      .then((player: YouTubeVideo) => this.pauseVideo())
+      .then((player: YouTubeVideo) => {
+        this.setVolume(oldVol);
+
+        return this._seekVideo(position);
+      });
+    }
   }
 
   /**
@@ -208,6 +254,34 @@ export class YouTubeVideo extends VideoAPI {
       logger.fatal(msg);
       throw new UnknownStateException(msg);
     }
+  }
+
+  /** Just seek with no safety checks */
+  private _seekVideo(position: number): Promise<YouTubeVideo> {
+    const oldStatus: VideoPlayerStatus = this.getStatus()
+    logger.debug("_seekVideo():> position:", position, "status:", this.getStatus());
+
+    return new Promise<YouTubeVideo> ((resolve, reject): void => {
+
+      // YouTube Player doesn't trigger onStatusChangeHandlers when seeking to an already buffered position in the video, when being paused.
+      // Thus we cannot get a confirmation that the seeking was actually done.
+      // Use a timeout to check if we are buffering, and if not, mark the seek as complete.
+      if (oldStatus === VideoPlayerStatus.paused) {
+        setTimeout(() => {
+          if (this.getStatus() !== VideoPlayerStatus.buffering) {
+            logger.debug(`stateChangeHandlers.${this.getStatus()}():> Position seeked without buffering from a paused state`);
+            resolve(this);
+          }
+        },100);
+      }
+
+      const func = (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
+        logger.debug(`stateChangeHandlers.${this.getStatus()}():> Position seeked`);
+        resolve(this);
+      };
+      this.stateChangeHandlers[oldStatus] = func;
+      this.ytPlayer.seekTo(position, true);
+    });
   }
 
   /**

@@ -12,7 +12,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 describe("Play a video from YouTube using a headless player,", () => {
   let videoPlayer: VideoPlayer;
-  const vpElement: Element = dom.appendBodyElement("div", "youtube-video-player", "video-player");
+  const vpElement: HTMLElement = dom.appendBodyElement("div", "youtube-video-player", "video-player");
 
   describe("Create a new VideoPlayer,", () => {
     it("Instantiate a new VideoPlayer", () => {

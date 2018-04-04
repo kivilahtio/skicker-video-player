@@ -47,11 +47,19 @@ export abstract class VideoAPI {
   private videoUrl: URL;
 
   public abstract destroy(): void;
+  /** Returns the duration of the video in seconds */
+  public abstract getDuration(): number;
   public abstract getPlaybackRate(): number;
+  /** Returns the current position in seconds in the currently played video. Decimals denote millisecond precision */
+  public abstract getPosition(): number;
   public abstract getStatus(): VideoPlayerStatus;
   public abstract getVolume(): number;
   public abstract loadVideo(videoId: string, options?: IVideoAPIOptions): Promise<VideoAPI>;
   public abstract pauseVideo(): Promise<VideoAPI>;
+  /**
+   * @param position time in seconds where to seek to? Use decimals to reach millisecond precision.
+   */
+  public abstract seekVideo(position: number): Promise<VideoAPI>;
   public abstract setPlaybackRate(playbackRate: number): Promise<VideoAPI>;
   public abstract setVolume(volume: number): void;
   public abstract startVideo(): Promise<VideoAPI>;

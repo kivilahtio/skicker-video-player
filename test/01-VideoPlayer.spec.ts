@@ -11,7 +11,7 @@ import * as dom from "./helpers/dom";
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 describe("VideoPlayer URL parsing,", () => {
-  const vpElement: Element = dom.appendBodyElement("div", "youtube-video-player", "video-player");
+  const vpElement: HTMLElement = dom.appendBodyElement("div", "youtube-video-player", "video-player");
   const videoPlayer: VideoPlayer = new VideoPlayer(vpElement);
 
   it("Known video source; bad URL", () => {

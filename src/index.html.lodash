@@ -30,7 +30,14 @@
       <div class="video-control video-control-title">
         TITLE
       </div>
+      <div class="video-control video-control-seek">
+        <label for="seekTo">Seek to: <input type="range" min=0 max=100 step=0.001 id="seekTo"/><span id="seekToView">null</span></label>
+      </div>
       <div class="divider"></div>
+    </div>
+    <div class="template-video-container">
+      <div class="video-player"></div>
+      <div class="video-getPosition">null</div>
     </div>
   </div>
   <header>

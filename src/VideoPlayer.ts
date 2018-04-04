@@ -52,6 +52,10 @@ export class VideoPlayer {
     this.rootElement = undefined;
   }
 
+  /** Returns the options given */
+  public getOptions(): IVideoAPIOptions {
+    return this.options;
+  }
   /**
    * Gets the status of the current video player implementation
    */
@@ -65,8 +69,6 @@ export class VideoPlayer {
    * Returns the video API implementation
    */
   public getVideoAPI(): VideoAPI {
-    logger.debug(`getVideoAPI():> returning ${this.videoAPI}`);
-
     return this.videoAPI;
   }
 
@@ -116,6 +118,10 @@ export class VideoPlayer {
 
   public pauseVideo(): Promise<VideoAPI> {
     return this.videoAPI.pauseVideo();
+  }
+
+  public seekVideo(position: number): Promise<VideoAPI> {
+    return this.videoAPI.seekVideo(position);
   }
 
   public setPlaybackRate(rate: number): Promise<VideoAPI> {

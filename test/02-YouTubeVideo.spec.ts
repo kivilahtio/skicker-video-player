@@ -9,7 +9,7 @@ import * as dom from "./helpers/dom";
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 describe("VideoPlayer rate validation", () => {
-  const vpElement: Element = dom.appendBodyElement("div", "youtube-video-player", "video-player");
+  const vpElement: HTMLElement = dom.appendBodyElement("div", "youtube-video-player", "video-player");
   const ytVideo: YouTubeVideo = new YouTubeVideo(vpElement);
 
   beforeAll((done) => {
