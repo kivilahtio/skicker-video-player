@@ -115,7 +115,7 @@ export class VideoPlayer {
 
       return this.videoAPI.loadVideo(this.videoId, this.options);
     } else {
-      logger.debug(`loadVideo():> Video already loaded, not loading it again, for videoId=${id}, api=${api}`);
+      logger.debug(`loadVideo():> Video already loaded, not loading it again, for videoId=${this.videoId}, api=${this.api}`);
 
       return Promise.resolve(this.videoAPI);
     }
