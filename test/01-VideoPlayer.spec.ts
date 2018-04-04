@@ -10,19 +10,19 @@ import * as dom from "./helpers/dom";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
+const vpElement: HTMLElement = dom.appendBodyElement("div", "youtube-video-player", "video-player");
+let videoPlayer: VideoPlayer;
 describe("VideoPlayer URL parsing,", () => {
-  const vpElement: HTMLElement = dom.appendBodyElement("div", "youtube-video-player", "video-player");
-  const videoPlayer: VideoPlayer = new VideoPlayer(vpElement);
 
   it("Known video source; bad URL", () => {
     let youtube: URL = new URL("https://www.youtube.com");
-    expect(() => (videoPlayer as any).parseURL(youtube))
+    expect(() => (new VideoPlayer(vpElement, {}, youtube)))
     .toThrowError(
       BadParameterException,
       `URL '${youtube.toString()}' doesn't include the video id. Using video source '${SupportedVideoAPIs.YouTube}'. Expected the URL to look like 'https://www.youtube.com/watch?v=d1mX_MBz0HU'`);
 
     youtube = new URL("https://www.youtube.com/video/id/vASDasd33");
-    expect(() => (videoPlayer as any).parseURL(youtube))
+    expect(() => (new VideoPlayer(vpElement, {}, youtube)))
     .toThrowError(
       BadParameterException,
       `URL '${youtube.toString()}' doesn't include the video id. Using video source '${SupportedVideoAPIs.YouTube}'. Expected the URL to look like 'https://www.youtube.com/watch?v=d1mX_MBz0HU'`);
@@ -30,13 +30,14 @@ describe("VideoPlayer URL parsing,", () => {
 
   it("Unknown video source", () => {
     const skicker: URL = new URL("https://www.skicker.com");
-    expect(() => (videoPlayer as any).parseURL(skicker))
+    expect(() => (new VideoPlayer(vpElement, {}, skicker)))
     .toThrowError(UnknownVideoSourceException, `Couldn't identify a known video source from URL '${skicker.toString()}'`);
   });
 
   it("Known video source and a good URL", () => {
     const youtube: URL = new URL("https://www.youtube.com/watch?v=d1mX_MBz0HU");
-    const apiType: SupportedVideoAPIs = (videoPlayer as any).parseURL(youtube);
+    videoPlayer = new VideoPlayer(vpElement, {}, youtube);
+    const apiType: SupportedVideoAPIs = (videoPlayer as any).api;
 
     expect(apiType)
     .toEqual(SupportedVideoAPIs.YouTube);

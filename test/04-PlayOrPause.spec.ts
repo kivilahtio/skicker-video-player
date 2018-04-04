@@ -15,7 +15,7 @@ describe("Seek a video", () => {
 
   describe("Create a new VideoPlayer,", () => {
     it("Instantiate a new VideoPlayer", () => {
-      videoPlayer = new VideoPlayer(vpElement);
+      videoPlayer = new VideoPlayer(vpElement, {}, new URL('https://www.youtube.com/watch?v=C0DPdy98e4c'));
 
       expect(videoPlayer)
       .toEqual(jasmine.any(VideoPlayer)); //videoPlayer is a VideoPlayer
@@ -25,7 +25,7 @@ describe("Seek a video", () => {
   describe("Load the video,", () => {
     it("Load-action triggered", () =>
       videoPlayer
-      .loadVideoFromURL(new URL('https://www.youtube.com/watch?v=C0DPdy98e4c'))
+      .loadVideo()
       .then(() => {
         expect(true)
         .toBe(true);
