@@ -21,13 +21,16 @@ class VideoPlayer {
      * @param rootElement Inject the video player here
      * @param options
      */
-    constructor(rootElement, options) {
+    constructor(rootElement, options, url) {
         this.options = {};
         this.youTubeURLParsingRegexp = /[&?]v=(\w+)(?:\?|$)/;
         logger.debug(`constructor():> params rootElement=${rootElement})`);
         this.rootElement = rootElement;
         if (options) {
             this.options = options;
+        }
+        if (url) {
+            this.parseURL(url);
         }
     }
     /**
@@ -76,8 +79,19 @@ class VideoPlayer {
         if (options) {
             $.extend(true, this.options, options);
         }
-        this.videoId = id;
-        this.api = api;
+        if (id) {
+            this.videoId = id;
+        }
+        if (this.videoId === undefined) {
+            Promise.reject(new BadParameter_1.BadParameterException("videoId is undefined. You must pass it here or in the constructor."));
+        }
+        if (api) {
+            this.api = api;
+        }
+        if (this.api === undefined) {
+            Promise.reject(new BadParameter_1.BadParameterException("video API is undefined. You must pass it here or in the constructor." +
+                "This is typically parsed from the base of the video url."));
+        }
         this.videoAPI = this.createVideoAPI();
         return this.videoAPI.loadVideo(this.videoId, this.options);
     }
@@ -98,17 +112,20 @@ class VideoPlayer {
         return this.videoAPI.pauseVideo();
     }
     playOrPauseVideo() {
-        return this.videoAPI.playOrPauseVideo();
+        return this.loadIfNotYetLoaded()
+            .then(() => this.videoAPI.playOrPauseVideo());
     }
     seekVideo(position) {
-        return this.videoAPI.seekVideo(position);
+        return this.loadIfNotYetLoaded()
+            .then(() => this.videoAPI.seekVideo(position));
     }
     setPlaybackRate(rate) {
-        return this.videoAPI.setPlaybackRate(rate);
+        return this.loadIfNotYetLoaded()
+            .then(() => this.videoAPI.setPlaybackRate(rate));
     }
     startVideo() {
-        logger.debug("startVideo()");
-        return this.videoAPI.startVideo();
+        return this.loadIfNotYetLoaded()
+            .then(() => this.videoAPI.startVideo());
     }
     stopVideo() {
         logger.debug("stopVideo()");
@@ -124,6 +141,15 @@ class VideoPlayer {
         else {
             throw new UnknownVideoSource_1.UnknownVideoSourceException(`Video source '${this.api}' is not supported`);
         }
+    }
+    /**
+     * Loads the VideoPlayer instance for the known URL if missing
+     */
+    loadIfNotYetLoaded() {
+        if (this.videoAPI === undefined) {
+            return this.loadVideo();
+        }
+        return Promise.resolve(this.videoAPI);
     }
     /**
      * given the URL of the video, decides which VideoAPI to use and extracts other available information

@@ -19,7 +19,7 @@ export declare class VideoPlayer {
      * @param rootElement Inject the video player here
      * @param options
      */
-    constructor(rootElement: HTMLElement, options?: IVideoAPIOptions);
+    constructor(rootElement: HTMLElement, options?: IVideoAPIOptions, url?: URL);
     /**
      * Release this player and all assets to garbage collection (hopefully)
      */
@@ -44,7 +44,7 @@ export declare class VideoPlayer {
      * @param api A supported video source API name. You can try casting a dynamic variable using "let api: SupportedVideoAPIs = SupportedVideoAPIs['YouTube'];"
      * @param options Options to pass to the video player implementation
      */
-    loadVideo(id: string, api: SupportedVideoAPIs, options?: IVideoAPIOptions): Promise<VideoAPI>;
+    loadVideo(id?: string, api?: SupportedVideoAPIs, options?: IVideoAPIOptions): Promise<VideoAPI>;
     /**
      * Prepares a video for playing. The video source and id is parsed from the URL.
      *
@@ -61,6 +61,10 @@ export declare class VideoPlayer {
     startVideo(): Promise<VideoAPI>;
     stopVideo(): Promise<VideoAPI>;
     private createVideoAPI();
+    /**
+     * Loads the VideoPlayer instance for the known URL if missing
+     */
+    private loadIfNotYetLoaded();
     /**
      * given the URL of the video, decides which VideoAPI to use and extracts other available information
      * such as the video id
