@@ -43,8 +43,20 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
         this.ytPlayerOptions = undefined;
         this.options = undefined;
     }
+    getDuration() {
+        if (this.ytPlayer) {
+            return this.ytPlayer.getDuration();
+        }
+        return undefined;
+    }
     getPlaybackRate() {
         return this.ytPlayer.getPlaybackRate();
+    }
+    getPosition() {
+        if (this.ytPlayer) {
+            return this.ytPlayer.getCurrentTime();
+        }
+        return undefined;
     }
     getStatus() {
         const stateName = this.translatePlayerStateEnumToString(this.ytPlayer.getPlayerState());
@@ -84,6 +96,32 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
             };
             this.ytPlayer.pauseVideo();
         });
+    }
+    /**
+     *  Seeking is a bit tricky since we need to be in the proper state. Otherwise we get strange errors and behaviour from YouTube Player.
+     *  If not in playing or paused -states, forcibly move there.
+     */
+    seekVideo(position) {
+        const status = this.getStatus();
+        logger.debug("seekVideo():> position:", position, "status:", status);
+        if (status === VideoAPI_1.VideoPlayerStatus.paused || status === VideoAPI_1.VideoPlayerStatus.playing || status === VideoAPI_1.VideoPlayerStatus.buffering) {
+            //These statuses are ok to seek from
+            return this._seekVideo(position);
+        }
+        else {
+            if (this.ytPlayer === undefined) {
+                return Promise.reject("YouTube player not loaded with a video yet. Cannot seek before loading a video.");
+            }
+            //These statuses are not ok. Mute+Play+Pause to get into the desired position to be able to seek.
+            const oldVol = this.getVolume();
+            this.setVolume(0);
+            return this.startVideo()
+                .then((player) => this.pauseVideo())
+                .then((player) => {
+                this.setVolume(oldVol);
+                return this._seekVideo(position);
+            });
+        }
     }
     /**
      * Sets the playback rate to the nearest available rate YouTube player supports.
@@ -161,6 +199,30 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
             logger.fatal(msg);
             throw new UnknownState_1.UnknownStateException(msg);
         }
+    }
+    /** Just seek with no safety checks */
+    _seekVideo(position) {
+        const oldStatus = this.getStatus();
+        logger.debug("_seekVideo():> position:", position, "status:", this.getStatus());
+        return new Promise((resolve, reject) => {
+            // YouTube Player doesn't trigger onStatusChangeHandlers when seeking to an already buffered position in the video, when being paused.
+            // Thus we cannot get a confirmation that the seeking was actually done.
+            // Use a timeout to check if we are buffering, and if not, mark the seek as complete.
+            if (oldStatus === VideoAPI_1.VideoPlayerStatus.paused) {
+                setTimeout(() => {
+                    if (this.getStatus() !== VideoAPI_1.VideoPlayerStatus.buffering) {
+                        logger.debug(`stateChangeHandlers.${this.getStatus()}():> Position seeked without buffering from a paused state`);
+                        resolve(this);
+                    }
+                }, 100);
+            }
+            const func = (ytv, event) => {
+                logger.debug(`stateChangeHandlers.${this.getStatus()}():> Position seeked`);
+                resolve(this);
+            };
+            this.stateChangeHandlers[oldStatus] = func;
+            this.ytPlayer.seekTo(position, true);
+        });
     }
     /**
      * Check if the desired rate is in the list of allowed playback rates, if not, raise an exception

@@ -70,6 +70,7 @@ const createVideoPlayerControl = (videoPlayer, i) => {
     // Define handlers to control the video playback
     /* 6. Destroy the video player */
     const destroyHandler = (ev) => {
+        window.clearInterval(videoPlayer._intervall);
         videoPlayer.destroy();
         $(ev.target).remove();
         $(videoControl).remove();
@@ -90,6 +91,17 @@ const createVideoPlayerControl = (videoPlayer, i) => {
             .catch((err) => alert(err.toString()));
     };
     $(videoControl).children(".video-control-pause").click(pauseHandler);
+    // Define seeker max and min positions based on the given start/end video positions
+    const seeker = $(videoControl).find(".video-control-seek input");
+    seeker.attr("min", videoPlayer.getOptions().start || 0);
+    seeker.attr("max", videoPlayer.getOptions().end || 0);
+    const seekHandler = (ev) => {
+        let val = $(ev.currentTarget).val();
+        videoPlayer.seekVideo(val);
+        $(videoControl).find(".video-control-seek #seekToView").html(val + "");
+    };
+    $(videoControl).find(".video-control-seek input").change(seekHandler);
+    return videoControl[0];
 };
 /** Store the created video players here */
 const videoPlayers = [];
@@ -107,16 +119,34 @@ form.onsubmit = function (e) {
     });
     logger.debug("Form onsubmit():> Form data=", formData);
     /* 3. Create the video player container and the video player */
-    const vpElement = $("<div/>", {
-        class: "video-player",
-        id: `video-player-${videoPlayers.length}`,
-    })[0];
-    $(vpElement).appendTo("body");
-    const videoPlayer = new VideoPlayer_1.VideoPlayer(vpElement);
+    // Clone the video player template and append it
+    const vpContainer = $(".template-video-container")
+        .clone()
+        .removeClass("template-video-container");
+    $(vpContainer).appendTo("body");
+    $(vpContainer).find(".video-player").attr("id", `video-player-${videoPlayers.length}`);
+    const vpTime = $(vpContainer).find(".video-getPosition")[0];
+    const vpPlayer = vpContainer.find(".video-player")[0];
+    const videoPlayer = new VideoPlayer_1.VideoPlayer(vpPlayer);
     videoPlayers.push(videoPlayer);
-    createVideoPlayerControl(videoPlayer, videoPlayers.length);
+    videoPlayer._intervall = window.setInterval(() => {
+        try {
+            $(vpTime).html(videoPlayer.getVideoAPI().getPosition() + "");
+        }
+        catch (e) {
+            //console.log(e);
+        }
+    }, 100);
+    const controller = createVideoPlayerControl(videoPlayer, videoPlayers.length);
     /* 5. Prepare the video for display */
     videoPlayer.loadVideoFromURL(new URL(formData["videoUrl"]), transformFormDataToIVideoAPIOptions(formData))
+        .then((videoAPI) => {
+        const seeker = $(controller).find(".video-control-seek input");
+        const max = Number.parseInt(seeker.attr("max"));
+        if (max === 0) {
+            seeker.attr("max", videoAPI.getDuration());
+        }
+    })
         .catch((err) => {
         alert(`VideoPlayer.loadVideoFromURL() threw an error?\n${err.toString()}`);
     });

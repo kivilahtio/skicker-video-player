@@ -25,7 +25,9 @@ export declare class YouTubeVideo extends VideoAPI {
      * Delete this instance and kill all pending actions
      */
     destroy(): void;
+    getDuration(): number | undefined;
     getPlaybackRate(): number;
+    getPosition(): number | undefined;
     getStatus(): VideoPlayerStatus;
     getVolume(): number;
     loadVideo(videoId: string, options?: IVideoAPIOptions): Promise<YouTubeVideo>;
@@ -33,6 +35,11 @@ export declare class YouTubeVideo extends VideoAPI {
      * https://developers.google.com/youtube/iframe_api_reference#pauseVideo
      */
     pauseVideo(): Promise<YouTubeVideo>;
+    /**
+     *  Seeking is a bit tricky since we need to be in the proper state. Otherwise we get strange errors and behaviour from YouTube Player.
+     *  If not in playing or paused -states, forcibly move there.
+     */
+    seekVideo(position: number): Promise<YouTubeVideo>;
     /**
      * Sets the playback rate to the nearest available rate YouTube player supports.
      *
@@ -50,6 +57,8 @@ export declare class YouTubeVideo extends VideoAPI {
      * @param state State received from the YT.Player.getPlayerState()
      */
     translatePlayerStateEnumToString(state: YT.PlayerState): string;
+    /** Just seek with no safety checks */
+    private _seekVideo(position);
     /**
      * Check if the desired rate is in the list of allowed playback rates, if not, raise an exception
      *

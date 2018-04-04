@@ -24,6 +24,8 @@ export declare class VideoPlayer {
      * Release this player and all assets to garbage collection (hopefully)
      */
     destroy(): void;
+    /** Returns the options given */
+    getOptions(): IVideoAPIOptions;
     /**
      * Gets the status of the current video player implementation
      */
@@ -53,6 +55,7 @@ export declare class VideoPlayer {
      */
     loadVideoFromURL(url: URL, options?: IVideoAPIOptions): Promise<VideoAPI>;
     pauseVideo(): Promise<VideoAPI>;
+    seekVideo(position: number): Promise<VideoAPI>;
     setPlaybackRate(rate: number): Promise<VideoAPI>;
     startVideo(): Promise<VideoAPI>;
     stopVideo(): Promise<VideoAPI>;

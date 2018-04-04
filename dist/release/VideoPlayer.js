@@ -41,6 +41,10 @@ class VideoPlayer {
             .remove();
         this.rootElement = undefined;
     }
+    /** Returns the options given */
+    getOptions() {
+        return this.options;
+    }
     /**
      * Gets the status of the current video player implementation
      */
@@ -52,7 +56,6 @@ class VideoPlayer {
      * Returns the video API implementation
      */
     getVideoAPI() {
-        logger.debug(`getVideoAPI():> returning ${this.videoAPI}`);
         return this.videoAPI;
     }
     /**
@@ -93,6 +96,9 @@ class VideoPlayer {
     }
     pauseVideo() {
         return this.videoAPI.pauseVideo();
+    }
+    seekVideo(position) {
+        return this.videoAPI.seekVideo(position);
     }
     setPlaybackRate(rate) {
         return this.videoAPI.setPlaybackRate(rate);
