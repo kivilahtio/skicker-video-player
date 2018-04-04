@@ -92,8 +92,14 @@ class VideoPlayer {
             Promise.reject(new BadParameter_1.BadParameterException("video API is undefined. You must pass it here or in the constructor." +
                 "This is typically parsed from the base of the video url."));
         }
-        this.videoAPI = this.createVideoAPI();
-        return this.videoAPI.loadVideo(this.videoId, this.options);
+        if (this.videoAPI === undefined) {
+            this.videoAPI = this.createVideoAPI();
+            return this.videoAPI.loadVideo(this.videoId, this.options);
+        }
+        else {
+            logger.debug(`loadVideo():> Video already loaded, not loading it again, for videoId=${id}, api=${api}`);
+            return Promise.resolve(this.videoAPI);
+        }
     }
     /**
      * Prepares a video for playing. The video source and id is parsed from the URL.
