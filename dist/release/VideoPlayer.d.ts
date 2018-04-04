@@ -55,6 +55,7 @@ export declare class VideoPlayer {
      */
     loadVideoFromURL(url: URL, options?: IVideoAPIOptions): Promise<VideoAPI>;
     pauseVideo(): Promise<VideoAPI>;
+    playOrPauseVideo(): Promise<VideoAPI>;
     seekVideo(position: number): Promise<VideoAPI>;
     setPlaybackRate(rate: number): Promise<VideoAPI>;
     startVideo(): Promise<VideoAPI>;

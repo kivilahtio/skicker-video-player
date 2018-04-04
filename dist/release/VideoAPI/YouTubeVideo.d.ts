@@ -35,6 +35,7 @@ export declare class YouTubeVideo extends VideoAPI {
      * https://developers.google.com/youtube/iframe_api_reference#pauseVideo
      */
     pauseVideo(): Promise<YouTubeVideo>;
+    playOrPauseVideo(): Promise<YouTubeVideo>;
     /**
      *  Seeking is a bit tricky since we need to be in the proper state. Otherwise we get strange errors and behaviour from YouTube Player.
      *  If not in playing or paused -states, forcibly move there.

@@ -97,6 +97,9 @@ class VideoPlayer {
     pauseVideo() {
         return this.videoAPI.pauseVideo();
     }
+    playOrPauseVideo() {
+        return this.videoAPI.playOrPauseVideo();
+    }
     seekVideo(position) {
         return this.videoAPI.seekVideo(position);
     }
