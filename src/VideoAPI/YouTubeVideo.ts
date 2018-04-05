@@ -9,7 +9,6 @@ import { BadPlaybackRateException } from "../Exception/BadPlaybackRate";
 import { MissingHandlerException } from "../Exception/MissingHandler";
 import { UnknownStateException } from "../Exception/UnknownState";
 
-import * as $ from "jquery";
 import { log4javascript, LoggerManager } from "skicker-logger-manager";
 const logger: log4javascript.Logger = LoggerManager.getLogger("Skicker.VideoAPI.YouTubeVideo");
 
@@ -62,8 +61,8 @@ export class YouTubeVideo extends VideoAPI {
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_Management
     this.ytPlayer.destroy();
     this.ytPlayer = undefined;
-    $(this.rootElement)
-    .remove();
+    this.rootElement.parentNode
+    .removeChild(this.rootElement);
     this.rootElement = undefined;
     this.ytPlayerOptions = undefined;
     this.options = undefined;
@@ -103,7 +102,7 @@ export class YouTubeVideo extends VideoAPI {
     logger.debug(`loadVideo():> params videoId=${videoId}, options=`, options);
 
     if (options) {
-      $.extend(true, this.options, options); // Merge options from the constructor with the new options, atleast the videoId must be given.
+      Object.assign(this.options, options); // Merge options from the constructor with the new options, atleast the videoId must be given.
     }
 
     return this.initIFrameAPI()

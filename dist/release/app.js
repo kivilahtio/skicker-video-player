@@ -12,15 +12,14 @@
  * 6. Destroys video player instances on demand.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const $ = require("jquery");
-const skicker_logger_manager_1 = require("skicker-logger-manager");
-require("./app.css");
-const VideoPlayer_1 = require("./VideoPlayer");
 /*
  * Initiate the logging subsystem. See the developer console to track what happens inside the video player.
+ * It is important to init is here before initing anything else, because when other modules are imported, they too require the
+ * Logging service to be available.
  */
+const skicker_logger_manager_1 = require("skicker-logger-manager");
 const initLoggers = () => {
-    skicker_logger_manager_1.LoggerManager.init(false);
+    skicker_logger_manager_1.LoggerManager.init();
     const rootLogger = skicker_logger_manager_1.LoggerManager.getLogger();
     rootLogger.removeAllAppenders();
     skicker_logger_manager_1.LoggerManager.setConfigurer("Skicker", (logger) => {
@@ -39,6 +38,9 @@ const initLoggers = () => {
 };
 initLoggers();
 const logger = skicker_logger_manager_1.LoggerManager.getLogger("Skicker");
+const $ = require("jquery");
+require("./app.css");
+const VideoPlayer_1 = require("./VideoPlayer");
 /* 2. Transform form submission to video player options */
 const transformFormDataToIVideoAPIOptions = (data) => {
     return {

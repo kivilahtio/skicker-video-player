@@ -7,7 +7,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const VideoAPI_1 = require("../VideoAPI");
 const BadPlaybackRate_1 = require("../Exception/BadPlaybackRate");
 const UnknownState_1 = require("../Exception/UnknownState");
-const $ = require("jquery");
 const skicker_logger_manager_1 = require("skicker-logger-manager");
 const logger = skicker_logger_manager_1.LoggerManager.getLogger("Skicker.VideoAPI.YouTubeVideo");
 /**
@@ -37,8 +36,8 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_Management
         this.ytPlayer.destroy();
         this.ytPlayer = undefined;
-        $(this.rootElement)
-            .remove();
+        this.rootElement.parentNode
+            .removeChild(this.rootElement);
         this.rootElement = undefined;
         this.ytPlayerOptions = undefined;
         this.options = undefined;
@@ -68,7 +67,7 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
     loadVideo(videoId, options) {
         logger.debug(`loadVideo():> params videoId=${videoId}, options=`, options);
         if (options) {
-            $.extend(true, this.options, options); // Merge options from the constructor with the new options, atleast the videoId must be given.
+            Object.assign(this.options, options); // Merge options from the constructor with the new options, atleast the videoId must be given.
         }
         return this.initIFrameAPI()
             .then((res) => this.createPlayer(videoId))

@@ -6,7 +6,6 @@ import { YouTubeVideo } from "./VideoAPI/YouTubeVideo";
 import { BadParameterException } from "./Exception/BadParameter";
 import { UnknownVideoSourceException } from "./Exception/UnknownVideoSource";
 
-import * as $ from "jquery";
 import { log4javascript, LoggerManager } from "skicker-logger-manager";
 const logger: log4javascript.Logger = LoggerManager.getLogger("Skicker.VideoPlayer");
 
@@ -50,8 +49,9 @@ export class VideoPlayer {
     logger.debug("destroy():> ");
     this.videoAPI.destroy();
     this.videoAPI = undefined;
-    $(this.rootElement)
-    .remove();
+    if (this.rootElement.parentNode) {
+      this.rootElement.parentNode.removeChild(this.rootElement);
+    }
     this.rootElement = undefined;
   }
 
@@ -94,7 +94,7 @@ export class VideoPlayer {
     logger.debug(`loadVideo():> params videoId=${id}, api=${api}, options=${options || {}}`);
 
     if (options) {
-      $.extend(true, this.options, options);
+      Object.assign(this.options, options);
     }
     if (id) {
       this.videoId = id;

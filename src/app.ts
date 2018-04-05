@@ -12,18 +12,15 @@
  */
 
 
-import * as $ from "jquery";
-import { log4javascript, LoggerManager } from "skicker-logger-manager";
-import "./app.css";
-
-import { IVideoAPIOptions, VideoAPI } from "./VideoAPI";
-import { VideoPlayer } from "./VideoPlayer";
 
 /*
  * Initiate the logging subsystem. See the developer console to track what happens inside the video player.
+ * It is important to init is here before initing anything else, because when other modules are imported, they too require the
+ * Logging service to be available.
  */
+import { log4javascript, LoggerManager } from "skicker-logger-manager";
 const initLoggers = (): void => {
-  LoggerManager.init(false);
+  LoggerManager.init();
 
   const rootLogger: log4javascript.Logger = LoggerManager.getLogger();
   rootLogger.removeAllAppenders();
@@ -44,6 +41,14 @@ const initLoggers = (): void => {
 };
 initLoggers();
 const logger: log4javascript.Logger = LoggerManager.getLogger("Skicker");
+
+
+import * as $ from "jquery";
+import "./app.css";
+
+import { IVideoAPIOptions, VideoAPI } from "./VideoAPI";
+import { VideoPlayer } from "./VideoPlayer";
+
 
 
 /* 2. Transform form submission to video player options */

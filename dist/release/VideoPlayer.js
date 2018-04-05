@@ -4,7 +4,6 @@ const VideoAPI_1 = require("./VideoAPI");
 const YouTubeVideo_1 = require("./VideoAPI/YouTubeVideo");
 const BadParameter_1 = require("./Exception/BadParameter");
 const UnknownVideoSource_1 = require("./Exception/UnknownVideoSource");
-const $ = require("jquery");
 const skicker_logger_manager_1 = require("skicker-logger-manager");
 const logger = skicker_logger_manager_1.LoggerManager.getLogger("Skicker.VideoPlayer");
 /**
@@ -40,8 +39,9 @@ class VideoPlayer {
         logger.debug("destroy():> ");
         this.videoAPI.destroy();
         this.videoAPI = undefined;
-        $(this.rootElement)
-            .remove();
+        if (this.rootElement.parentNode) {
+            this.rootElement.parentNode.removeChild(this.rootElement);
+        }
         this.rootElement = undefined;
     }
     /** Returns the options given */
@@ -77,7 +77,7 @@ class VideoPlayer {
     loadVideo(id, api, options) {
         logger.debug(`loadVideo():> params videoId=${id}, api=${api}, options=${options || {}}`);
         if (options) {
-            $.extend(true, this.options, options);
+            Object.assign(this.options, options);
         }
         if (id) {
             this.videoId = id;
