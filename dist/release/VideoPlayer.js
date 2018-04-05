@@ -180,6 +180,14 @@ class VideoPlayer {
             //    } else if (url.hostname === "www.vimeo.com") {
             //      return new VimeoVideo();
         }
+        else if (url.hostname === "youtu.be") {
+            this.api = VideoAPI_1.SupportedVideoAPIs.YouTube;
+            const videoId = url.pathname.substr(1); // Omit the first character which is a '/'
+            if (!videoId) {
+                throw new BadParameter_1.BadParameterException(`URL '${url.toString()}' doesn't include the video id. Using video source '${this.api}'. Expected the URL to look like 'https://youtu.be/d1mX_MBz0HU'`);
+            }
+            this.videoId = videoId;
+        }
         else {
             throw new UnknownVideoSource_1.UnknownVideoSourceException(`Couldn't identify a known video source from URL '${url.toString()}'`);
         }

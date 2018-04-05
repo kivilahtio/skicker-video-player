@@ -220,6 +220,15 @@ export class VideoPlayer {
 //    } else if (url.hostname === "www.vimeo.com") {
 //      return new VimeoVideo();
 
+    } else if (url.hostname === "youtu.be") {
+      this.api = SupportedVideoAPIs.YouTube;
+      const videoId: string = url.pathname.substr(1); // Omit the first character which is a '/'
+      if (! videoId) {
+        throw new BadParameterException(
+          `URL '${url.toString()}' doesn't include the video id. Using video source '${this.api}'. Expected the URL to look like 'https://youtu.be/d1mX_MBz0HU'`);
+      }
+      this.videoId = videoId;
+
     } else {
       throw new UnknownVideoSourceException(`Couldn't identify a known video source from URL '${url.toString()}'`);
     }

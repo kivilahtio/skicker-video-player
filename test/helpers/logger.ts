@@ -5,7 +5,7 @@
 import { log4javascript, LoggerManager } from "skicker-logger-manager";
 
 export function initLoggingSubsystem(): void {
-  LoggerManager.init(false);
+  LoggerManager.init();
 
   const rootLogger: log4javascript.Logger = LoggerManager.getLogger();
   rootLogger.removeAllAppenders();

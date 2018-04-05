@@ -8,8 +8,28 @@ import * as dom from "./helpers/dom";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
+const vpElement: HTMLElement = dom.appendBodyElement("div", "youtube-video-player", "video-player");
+
+describe("YouTube video URL parsing,", () => {
+  it("https://youtu.be/BrW89n0Hss4", () => {
+    const vp = new VideoPlayer(vpElement, {}, new URL("https://youtu.be/BrW89n0Hss4"));
+    expect(vp)
+    .toBeTruthy();
+    expect(vp.getVideoId())
+    .toEqual("BrW89n0Hss4");
+  });
+
+  it("https://www.youtube.com/watch?v=C0DPdy98e4c", () => {
+    const vp = new VideoPlayer(vpElement, {}, new URL("https://www.youtube.com/watch?v=C0DPdy98e4c"));
+    expect(vp)
+    .toBeTruthy();
+    expect(vp.getVideoId())
+    .toEqual("C0DPdy98e4c");
+  });
+
+});
+
 describe("VideoPlayer rate validation", () => {
-  const vpElement: HTMLElement = dom.appendBodyElement("div", "youtube-video-player", "video-player");
   const ytVideo: YouTubeVideo = new YouTubeVideo(vpElement);
 
   beforeAll((done) => {
