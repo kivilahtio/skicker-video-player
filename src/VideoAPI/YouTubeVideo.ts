@@ -6,6 +6,7 @@
 import { IVideoAPIOptions, VideoAPI, VideoPlayerStatus } from "../VideoAPI";
 
 import { BadPlaybackRateException } from "../Exception/BadPlaybackRate";
+import { CreateException } from "../Exception/Create";
 import { MissingHandlerException } from "../Exception/MissingHandler";
 import { UnknownStateException } from "../Exception/UnknownState";
 
@@ -34,6 +35,8 @@ export class YouTubeVideo extends VideoAPI {
   };
   private availablePlaybackRates: number[];
   private options: IVideoAPIOptions = {};
+  /** Is set when the YTPlayer is created to timeout the creation promise */
+  private playerCreateTimeoutter: number;
   private rootElement: HTMLElement;
   private stateChangeHandlers: {[key: string]: (ytv: YouTubeVideo, event: YT.PlayerEvent) => void} = {};
   private ytPlayer: YT.Player;
@@ -318,19 +321,27 @@ export class YouTubeVideo extends VideoAPI {
    */
   private createPlayer(videoId: string): Promise<YouTubeVideo> {
     if (! this.ytPlayer) {
-      logger.debug("createPlayer():> Creating a new player");
-
-      return new Promise<YouTubeVideo> ((resolve: (value:YouTubeVideo) => void, reject: (value:string) => void): void => {
+      return new Promise<YouTubeVideo> ((resolve: (value:YouTubeVideo) => void, reject: (err:Error) => void): void => {
         this.ytPlayerOptions = this.translateIVideoAPIOptionsToYTPlayerOptions(this.options);
         this.ytPlayerOptions.videoId = videoId;
 
         this.injectDefaultHandlers(resolve, reject); // This promise is resolved from the injected default onReady()-callback
 
-        logger.debug("createPlayer():> elementId=", this.rootElement.id, "ytPlayerOptions=", this.ytPlayerOptions);
+        // If Player cannot be created in 10s, trigger a timeout and fail the promise.
+        const createTimeoutInMillis: number = 10000;
+        this.playerCreateTimeoutter = setTimeout(
+          () => {
+            logger.error("createPlayer():> YouTube Player creating timed out for videoId="+videoId);
+            reject(new CreateException("createPlayer():> YouTube Player creating timed out for videoId="+videoId));
+          },
+          createTimeoutInMillis,
+        );
+
+        logger.debug("createPlayer():> Creating a new player, videoId="+videoId+", elementId=", this.rootElement.id, "ytPlayerOptions=", this.ytPlayerOptions);
         this.ytPlayer = new YT.Player(this.rootElement.id, this.ytPlayerOptions);
       });
     } else {
-      logger.debug("createPlayer():> Player exists, Promise resolved");
+      logger.debug("createPlayer():> Player exists, Promise resolved for videoId="+videoId);
 
       return Promise.resolve(this);
     }
@@ -341,8 +352,8 @@ export class YouTubeVideo extends VideoAPI {
    * Makes sure the API code is loaded once even when using multiple players on the same document
    */
   private initIFrameAPI(): Promise<YouTubeVideo> {
-    logger.debug("initIFrameAPI():> ");
     if (! document.getElementById("youtube-iframe_api")) {
+      logger.debug("initIFrameAPI():> ");
       const tag: HTMLElement = document.createElement("script");
 
       tag.setAttribute("src", "https://www.youtube.com/iframe_api");
@@ -350,14 +361,14 @@ export class YouTubeVideo extends VideoAPI {
       const firstScriptTag: HTMLElement = document.getElementsByTagName("script")[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-      return new Promise<YouTubeVideo> ((resolve: (value:YouTubeVideo) => void, reject: (value:string) => void): void => {
+      return new Promise<YouTubeVideo> ((resolve: (value:YouTubeVideo) => void, reject: (error:Error) => void): void => {
 
         // If script cannot be downloaded and processed in 10s, trigger a timeout and fail the promise.
         const iframeInitializationTimeoutInMillis: number = 10000;
         const timeoutter: number = setTimeout(
           () => {
             logger.error("onYouTubeIframeAPIReady():> IFrame API loading timed out");
-            reject("Promise timed out");
+            reject(new CreateException("onYouTubeIframeAPIReady():> IFrame API loading timed out"));
           },
           iframeInitializationTimeoutInMillis,
         );
@@ -382,7 +393,7 @@ export class YouTubeVideo extends VideoAPI {
    * @param resolve upstream Promise resolver
    * @param reject  upstream Promise resolver
    */
-  private injectDefaultHandlers(resolve: (value:YouTubeVideo) => void, reject: (value:string) => void): void {
+  private injectDefaultHandlers(resolve: (value:YouTubeVideo) => void, reject: (err:Error) => void): void {
     if (! this.ytPlayerOptions.events) {
       this.ytPlayerOptions.events = {};
     }
@@ -390,6 +401,7 @@ export class YouTubeVideo extends VideoAPI {
     // The API will call this function when the video player is ready.
     const onPlayerReady: YT.PlayerEventHandler<YT.PlayerEvent> = (event:YT.PlayerEvent): void => {
       logger.debug(`onPlayerReady():> params state=${this.translatePlayerStateEnumToString(event.target.getPlayerState())}, Promise resolved`);
+      clearTimeout(this.playerCreateTimeoutter);
       resolve(this);
     };
     // Inject the ready-handler to YT.Events

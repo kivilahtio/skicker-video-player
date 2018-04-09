@@ -9,6 +9,8 @@ export enum SupportedVideoAPIs { //Using string-based enums, for easier debuggin
  * Currently only VideoAPI.YouTubePlayer uses this mapping table. If other backends are added, generalize mappings.
  */
 export enum VideoPlayerStatus {
+  /** VideoPlayer has been initialized, but the VideoAPI has not been loaded or the VideoAPI is not available */
+  notLoaded = "not loaded",
   unstarted = "unstarted",
   ended =     "ended",
   playing =   "playing",

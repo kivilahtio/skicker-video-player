@@ -30,10 +30,11 @@ describe("YouTube video URL parsing,", () => {
 });
 
 describe("VideoPlayer rate validation", () => {
+
   const ytVideo: YouTubeVideo = new YouTubeVideo(vpElement);
 
   beforeAll((done) => {
-    ytVideo.loadVideo("M7lc1UVf-VE")
+    ytVideo.loadVideo("C0DPdy98e4c")
     .then(done)
     .catch((err: any) => {
       fail(`Loading a YouTube video failed because of\n${err.toString()}`);

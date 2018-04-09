@@ -55,17 +55,44 @@ export class VideoPlayer {
     this.rootElement = undefined;
   }
 
+  /**
+   * Returns -1 if videoAPI has not been loaded
+   */
+  public getDuration(): number {
+    if (this.videoAPI) {
+      return this.videoAPI.getDuration();
+    }
+
+    return -1;
+  }
+
   /** Returns the options given */
   public getOptions(): IVideoAPIOptions {
     return this.options;
   }
+
+  /**
+   * Returns -1 if videoAPI has not been loaded
+   */
+  public getPosition(): number {
+    if (this.videoAPI) {
+      return this.videoAPI.getPosition();
+    }
+
+    return -1;
+  }
+
   /**
    * Gets the status of the current video player implementation
    */
   public getStatus(): VideoPlayerStatus {
-    logger.debug(`getStatus():> returning ${this.videoAPI.getStatus()}`);
+    if (this.videoAPI) {
+      logger.debug(`getStatus():> returning ${this.videoAPI.getStatus()}`);
+      return this.videoAPI.getStatus();
+    }
 
-    return this.videoAPI.getStatus();
+    logger.debug(`getStatus():> returning ${VideoPlayerStatus.notLoaded}`);
+    return VideoPlayerStatus.notLoaded;
   }
 
   /**
