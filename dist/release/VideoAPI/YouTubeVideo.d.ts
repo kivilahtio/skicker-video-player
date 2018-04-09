@@ -11,6 +11,8 @@ export declare class YouTubeVideo extends VideoAPI {
     private static ytPlayerStates;
     private availablePlaybackRates;
     private options;
+    /** Is set when the YTPlayer is created to timeout the creation promise */
+    private playerCreateTimeoutter;
     private rootElement;
     private stateChangeHandlers;
     private ytPlayer;

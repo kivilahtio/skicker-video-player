@@ -24,8 +24,16 @@ export declare class VideoPlayer {
      * Release this player and all assets to garbage collection (hopefully)
      */
     destroy(): void;
+    /**
+     * Returns -1 if videoAPI has not been loaded
+     */
+    getDuration(): number;
     /** Returns the options given */
     getOptions(): IVideoAPIOptions;
+    /**
+     * Returns -1 if videoAPI has not been loaded
+     */
+    getPosition(): number;
     /**
      * Gets the status of the current video player implementation
      */

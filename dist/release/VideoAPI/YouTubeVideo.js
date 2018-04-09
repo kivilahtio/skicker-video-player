@@ -6,6 +6,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const VideoAPI_1 = require("../VideoAPI");
 const BadPlaybackRate_1 = require("../Exception/BadPlaybackRate");
+const Create_1 = require("../Exception/Create");
 const UnknownState_1 = require("../Exception/UnknownState");
 const skicker_logger_manager_1 = require("skicker-logger-manager");
 const logger = skicker_logger_manager_1.LoggerManager.getLogger("Skicker.VideoAPI.YouTubeVideo");
@@ -256,17 +257,22 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
      */
     createPlayer(videoId) {
         if (!this.ytPlayer) {
-            logger.debug("createPlayer():> Creating a new player");
             return new Promise((resolve, reject) => {
                 this.ytPlayerOptions = this.translateIVideoAPIOptionsToYTPlayerOptions(this.options);
                 this.ytPlayerOptions.videoId = videoId;
                 this.injectDefaultHandlers(resolve, reject); // This promise is resolved from the injected default onReady()-callback
-                logger.debug("createPlayer():> elementId=", this.rootElement.id, "ytPlayerOptions=", this.ytPlayerOptions);
+                // If Player cannot be created in 10s, trigger a timeout and fail the promise.
+                const createTimeoutInMillis = 10000;
+                this.playerCreateTimeoutter = setTimeout(() => {
+                    logger.error("createPlayer():> YouTube Player creating timed out for videoId=" + videoId);
+                    reject(new Create_1.CreateException("createPlayer():> YouTube Player creating timed out for videoId=" + videoId));
+                }, createTimeoutInMillis);
+                logger.debug("createPlayer():> Creating a new player, videoId=" + videoId + ", elementId=", this.rootElement.id, "ytPlayerOptions=", this.ytPlayerOptions);
                 this.ytPlayer = new YT.Player(this.rootElement.id, this.ytPlayerOptions);
             });
         }
         else {
-            logger.debug("createPlayer():> Player exists, Promise resolved");
+            logger.debug("createPlayer():> Player exists, Promise resolved for videoId=" + videoId);
             return Promise.resolve(this);
         }
     }
@@ -275,8 +281,8 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
      * Makes sure the API code is loaded once even when using multiple players on the same document
      */
     initIFrameAPI() {
-        logger.debug("initIFrameAPI():> ");
         if (!document.getElementById("youtube-iframe_api")) {
+            logger.debug("initIFrameAPI():> ");
             const tag = document.createElement("script");
             tag.setAttribute("src", "https://www.youtube.com/iframe_api");
             tag.setAttribute("id", "youtube-iframe_api");
@@ -287,7 +293,7 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
                 const iframeInitializationTimeoutInMillis = 10000;
                 const timeoutter = setTimeout(() => {
                     logger.error("onYouTubeIframeAPIReady():> IFrame API loading timed out");
-                    reject("Promise timed out");
+                    reject(new Create_1.CreateException("onYouTubeIframeAPIReady():> IFrame API loading timed out"));
                 }, iframeInitializationTimeoutInMillis);
                 // YouTube IFrame API signals intialization is complete
                 window.onYouTubeIframeAPIReady = () => {
@@ -316,6 +322,7 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
         // The API will call this function when the video player is ready.
         const onPlayerReady = (event) => {
             logger.debug(`onPlayerReady():> params state=${this.translatePlayerStateEnumToString(event.target.getPlayerState())}, Promise resolved`);
+            clearTimeout(this.playerCreateTimeoutter);
             resolve(this);
         };
         // Inject the ready-handler to YT.Events

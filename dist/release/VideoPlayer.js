@@ -44,16 +44,38 @@ class VideoPlayer {
         }
         this.rootElement = undefined;
     }
+    /**
+     * Returns -1 if videoAPI has not been loaded
+     */
+    getDuration() {
+        if (this.videoAPI) {
+            return this.videoAPI.getDuration();
+        }
+        return -1;
+    }
     /** Returns the options given */
     getOptions() {
         return this.options;
     }
     /**
+     * Returns -1 if videoAPI has not been loaded
+     */
+    getPosition() {
+        if (this.videoAPI) {
+            return this.videoAPI.getPosition();
+        }
+        return -1;
+    }
+    /**
      * Gets the status of the current video player implementation
      */
     getStatus() {
-        logger.debug(`getStatus():> returning ${this.videoAPI.getStatus()}`);
-        return this.videoAPI.getStatus();
+        if (this.videoAPI) {
+            logger.debug(`getStatus():> returning ${this.videoAPI.getStatus()}`);
+            return this.videoAPI.getStatus();
+        }
+        logger.debug(`getStatus():> returning ${VideoAPI_1.VideoPlayerStatus.notLoaded}`);
+        return VideoAPI_1.VideoPlayerStatus.notLoaded;
     }
     /**
      * Returns the video API implementation

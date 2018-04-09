@@ -12,6 +12,8 @@ var SupportedVideoAPIs;
  */
 var VideoPlayerStatus;
 (function (VideoPlayerStatus) {
+    /** VideoPlayer has been initialized, but the VideoAPI has not been loaded or the VideoAPI is not available */
+    VideoPlayerStatus["notLoaded"] = "not loaded";
     VideoPlayerStatus["unstarted"] = "unstarted";
     VideoPlayerStatus["ended"] = "ended";
     VideoPlayerStatus["playing"] = "playing";

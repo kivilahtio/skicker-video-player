@@ -5,6 +5,8 @@ export declare enum SupportedVideoAPIs {
     YouTube = "YouTube",
 }
 export declare enum VideoPlayerStatus {
+    /** VideoPlayer has been initialized, but the VideoAPI has not been loaded or the VideoAPI is not available */
+    notLoaded = "not loaded",
     unstarted = "unstarted",
     ended = "ended",
     playing = "playing",
