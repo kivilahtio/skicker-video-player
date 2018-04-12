@@ -39,8 +39,8 @@ class VideoPlayer {
         logger.debug("destroy():> ");
         this.videoAPI.destroy();
         this.videoAPI = undefined;
-        if (this.rootElement.parentNode) {
-            this.rootElement.parentNode.removeChild(this.rootElement);
+        if (this.rootElement) {
+            this.rootElement.remove();
         }
         this.rootElement = undefined;
     }
@@ -65,6 +65,10 @@ class VideoPlayer {
             return this.videoAPI.getPosition();
         }
         return -1;
+    }
+    /** Get the container for this VideoPlayer */
+    getRootElement() {
+        return this.rootElement;
     }
     /**
      * Gets the status of the current video player implementation

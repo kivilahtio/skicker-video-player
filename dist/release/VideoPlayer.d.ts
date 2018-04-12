@@ -34,6 +34,8 @@ export declare class VideoPlayer {
      * Returns -1 if videoAPI has not been loaded
      */
     getPosition(): number;
+    /** Get the container for this VideoPlayer */
+    getRootElement(): HTMLElement;
     /**
      * Gets the status of the current video player implementation
      */

@@ -8,6 +8,12 @@ import { IVideoAPIOptions, VideoAPI, VideoPlayerStatus } from "../VideoAPI";
  * Implements the YouTube IFrame Video Player API, wrapping it into nice promises
  */
 export declare class YouTubeVideo extends VideoAPI {
+    /**
+     * How long does each Promise created in this class take to timeout?
+     * This is used to protect and catch against leaking promises that never resolve.
+     * Time unit in ms
+     */
+    promiseSafetyTimeout: number;
     private static ytPlayerStates;
     private availablePlaybackRates;
     private options;
@@ -15,6 +21,11 @@ export declare class YouTubeVideo extends VideoAPI {
     private playerCreateTimeoutter;
     private rootElement;
     private stateChangeHandlers;
+    /**
+     * Keep track of the promises that are expecting state chabnge handlers to fulfill.
+     * Cannot have multiple handlers overlap since YouTube API doesn't distinguish specific events.
+     */
+    private stateChangeHandlersReservations;
     private ytPlayer;
     private ytPlayerOptions;
     /**
@@ -86,4 +97,19 @@ export declare class YouTubeVideo extends VideoAPI {
      */
     private injectDefaultHandlers(resolve, reject);
     private translateIVideoAPIOptionsToYTPlayerOptions(opts);
+    /** Create a single-use state change handler */
+    private setStateChangeHandler(event, promiseId, handler);
+    /** One must call this to mark a stateChangeHandler resolved */
+    private stateChangeHandlerFulfilled(event, promiseId);
+    private logCtx(promiseId?, ctx?, message?);
+    /** Get a random string intended to track down individual promises */
+    private getPromiseId();
+    /**
+     * Wraps a promise into identifiable log output and timeout to catch stray promises
+     * @param ctx Context describing where this promise is used, like "startVideo"
+     * @param promiseId temporarily unique identifier for this Promise, used to help finding out the order of events related
+     *                  to a singular Promise from the log output.
+     * @param callback The function to promisify
+     */
+    private promisify<G>(ctx, callback, promiseId?);
 }
