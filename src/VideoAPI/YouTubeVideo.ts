@@ -322,6 +322,8 @@ export class YouTubeVideo extends VideoAPI {
           if (this.getStatus() !== VideoPlayerStatus.buffering) {
             logger.debug(this.logCtx(promiseId, ctx,
               `stateChangeHandlers.${this.getStatus()}():> Position seeked without buffering from a ${oldStatus}-state`));
+            this.stateChangeHandlerFulfilled(oldStatus, promiseId);
+            //this.stateChangeHandlerFulfilled(VideoPlayerStatus.ended, promiseId); //It is possible to seek to the end
             resolve(this);
           }
         },100);
@@ -330,12 +332,14 @@ export class YouTubeVideo extends VideoAPI {
       const func = (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
         logger.debug(this.logCtx(promiseId, ctx, `stateChangeHandlers.${this.getStatus()}():> Position seeked`));
         this.stateChangeHandlerFulfilled(oldStatus, promiseId);
+        //this.stateChangeHandlerFulfilled(VideoPlayerStatus.ended, promiseId); //It is possible to seek to the end
         if (cancel) {
           window.clearTimeout(cancel);
         }
         resolve(this);
       };
       this.setStateChangeHandler(oldStatus, promiseId, func);
+      //this.setStateChangeHandler(VideoPlayerStatus.ended, promiseId, func); //It is possible to seek to the end
       this.ytPlayer.seekTo(position, true);
     }, promiseId);
   }

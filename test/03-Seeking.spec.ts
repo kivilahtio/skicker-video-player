@@ -196,6 +196,21 @@ describe("Seek a video - Bug - Never resolving Promise when seeking+buffering a 
         expect(vapi.getStatus()).toBe(VideoPlayerStatus.playing);
       });
     });
+
+    it("Seek to the end while playing", () => {
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.playing);
+      logger.info("Seek to the end while playing");
+      return tu.seek("1:05:22", 0.250)
+      .then(() => {
+        expect(videoPlayer.getStatus())
+        .toBe(VideoPlayerStatus.ended);
+      });
+    });
+
+    it("Start playing again. stateChangeHandlers for event 'start' should be free", () => {
+      logger.info("Start playing again. stateChangeHandlers for event 'start' should be free");
+      return tu.start();
+    });
   });
 
   it("Destroy", () => {

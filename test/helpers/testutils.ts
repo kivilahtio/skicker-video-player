@@ -70,11 +70,26 @@ export const createPlayer = (url: string|URL, opts?: IVideoAPIOptions, elementId
 
 /**
  * Seek the VideoPlayer to given position and assert we are within the given tolerance of the position
- * @param pos
+ * @param pos seconds as a number, or a h:m:s || m:s notation as string
  * @param tolerance
  */
-export const seek = (pos: number, tolerance: number): Promise<VideoAPI> =>
-  vp
+export const seek = (pos: number | string, tolerance: number): Promise<VideoAPI> => {
+  if (typeof(pos) === "string") { //This is a position like 1:05:22
+    let seconds: number = 0;
+    const hms: string[] = pos.split(":");
+    if (hms.length === 3) { //hms
+      seconds =  Number(hms[0]) * 3600;
+      seconds += Number(hms[1]) * 60;
+      seconds += Number(hms[2]);
+    } else if (hms.length === 2) { //hms
+      seconds =  Number(hms[0]) * 60;
+      seconds += Number(hms[1]);
+    } else if (hms.length === 1) { //hms
+      seconds =  Number(hms[0]);
+    }
+    pos = seconds;
+  }
+  return vp
   .seekVideo(pos)
   .then((vapi: VideoAPI) => {
 
@@ -89,6 +104,7 @@ export const seek = (pos: number, tolerance: number): Promise<VideoAPI> =>
     logger.fatal(err, err.stack);
     throw err;
   });
+};
 
 export const start = (): Promise<VideoAPI> =>
   vp.startVideo()
