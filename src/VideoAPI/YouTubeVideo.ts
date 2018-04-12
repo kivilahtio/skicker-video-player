@@ -316,7 +316,8 @@ export class YouTubeVideo extends VideoAPI {
       // Thus we cannot get a confirmation that the seeking was actually done.
       // Use a timeout to check if we are buffering, and if not, mark the seek as complete.
       let cancel: number;
-      if (oldStatus === VideoPlayerStatus.paused) {
+      if (oldStatus === VideoPlayerStatus.paused ||
+          oldStatus === VideoPlayerStatus.playing) {
         cancel = window.setTimeout(() => {
           if (this.getStatus() !== VideoPlayerStatus.buffering) {
             logger.debug(this.logCtx(promiseId, ctx,

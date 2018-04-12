@@ -146,3 +146,60 @@ describe("Seek a video", () => {
     tu.destroy();
   });
 });
+
+////
+//// YET ANOTHER TEST MODULE
+////
+describe("Seek a video - Bug - Never resolving Promise when seeking+buffering a playing video", () => {
+  let videoPlayer: VideoPlayer;
+
+  it("Instantiate a new VideoPlayer", () => {
+    logger.info("Instantiate a new VideoPlayer");
+    videoPlayer = tu.createPlayer(new URL('https://www.youtube.com/watch?v=d1mX_MBz0HU'), {}, undefined);
+  });
+
+  describe("Seek when Video has not been loaded,", () => {
+    it("Seek when Video has not been loaded, Seek-action triggered", () => {
+      logger.info("Seek-action triggered");
+      return tu.seek(16.500, 0.250)
+      .then((vapi: VideoAPI) => {
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.paused);
+      });
+    });
+    it("Seek when Video has not been loaded, Seek-action triggered again to test onStateChangeHandlers for same-state transition", () => {
+      logger.info("Seek-action triggered again to test onStateChangeHandlers for same-state transition");
+      return tu.seek(25.500, 0.250)
+      .then((vapi: VideoAPI) => {
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.paused);
+      });
+    });
+  });
+
+  describe("Start playing and seek,", () => {
+    it("Start playing and seek, Start-action triggered", () => {
+      logger.info("Start-action triggered");
+      return tu.start();
+    });
+
+    it("Seek-action triggered", () => {
+      logger.info("Seek-action triggered");
+      return tu.seek(45.500, 0.250)
+      .then((vapi: VideoAPI) => {
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.playing);
+      });
+    });
+
+    it("Seek-action triggered again to test onStateChangeHandlers for same-state transition", () => {
+      logger.info("Seek-action triggered again to test onStateChangeHandlers for same-state transition");
+      return tu.seek(46.500, 0.250)
+      .then((vapi: VideoAPI) => {
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.playing);
+      });
+    });
+  });
+
+  it("Destroy", () => {
+    logger.info("Destroy");
+    tu.destroy();
+  });
+});
