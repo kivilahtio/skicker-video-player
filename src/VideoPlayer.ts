@@ -49,8 +49,8 @@ export class VideoPlayer {
     logger.debug("destroy():> ");
     this.videoAPI.destroy();
     this.videoAPI = undefined;
-    if (this.rootElement.parentNode) {
-      this.rootElement.parentNode.removeChild(this.rootElement);
+    if (this.rootElement) {
+      this.rootElement.remove();
     }
     this.rootElement = undefined;
   }
@@ -80,6 +80,11 @@ export class VideoPlayer {
     }
 
     return -1;
+  }
+
+  /** Get the container for this VideoPlayer */
+  public getRootElement(): HTMLElement {
+    return this.rootElement;
   }
 
   /**

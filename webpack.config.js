@@ -8,6 +8,7 @@ const CopyWebpackPlugin  = require('copy-webpack-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 
+
 //NODE_ENV defaults to 'development'
 var NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) NODE_ENV = "development";
@@ -136,6 +137,9 @@ var webpackCommonConfig = {
       inject: true,
       hash: true,
       NODE_ENV: NODE_ENV,
+    }),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': "'"+NODE_ENV+"'",
     }),
   ],
 };

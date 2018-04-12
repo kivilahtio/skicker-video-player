@@ -5,8 +5,7 @@
  *
  * To pick only an individual test file for the browser testing, modify this file, not the build scripts!
  */
-import { initLoggingSubsystem } from "./helpers/logger";
-initLoggingSubsystem();
+import "./helpers/logger";
 
 const requireAll = (requireContext: any) => { requireContext.keys().map(requireContext); };
 
