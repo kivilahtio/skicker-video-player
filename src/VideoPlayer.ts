@@ -186,8 +186,8 @@ export class VideoPlayer {
 
   public pauseVideo(): Promise<VideoAPI> {
     if (this.videoAPI === undefined) {
-      return this.loadVideo()
-      .then(() => this.queueAction("pauseVideo", this.videoAPI.pauseVideo));
+      this.loadVideo(); //Queue a load action
+      return this.queueAction("pauseVideo", this.videoAPI.pauseVideo);
     }
 
     return this.queueAction("pauseVideo", this.videoAPI.pauseVideo);
@@ -195,8 +195,8 @@ export class VideoPlayer {
 
   public playOrPauseVideo(): Promise<VideoAPI> {
     if (this.videoAPI === undefined) {
-      return this.loadVideo()
-      .then(() => this.queueAction("playOrPauseVideo", this.videoAPI.playOrPauseVideo));
+      this.loadVideo();
+      return this.queueAction("playOrPauseVideo", this.videoAPI.playOrPauseVideo);
     }
 
     return this.queueAction("playOrPauseVideo", this.videoAPI.playOrPauseVideo);
@@ -204,8 +204,8 @@ export class VideoPlayer {
 
   public seekVideo(position: number): Promise<VideoAPI> {
     if (this.videoAPI === undefined) {
-      return this.loadVideo()
-      .then(() => this.queueAction("seekVideo", this.videoAPI.seekVideo, position));
+      this.loadVideo();
+      return this.queueAction("seekVideo", this.videoAPI.seekVideo, position);
     }
 
     return this.queueAction("seekVideo", this.videoAPI.seekVideo, position);
@@ -213,8 +213,8 @@ export class VideoPlayer {
 
   public setPlaybackRate(rate: number): Promise<VideoAPI> {
     if (this.videoAPI === undefined) {
-      return this.loadVideo()
-      .then(() => this.queueAction("setPlaybackRate", this.videoAPI.setPlaybackRate, rate));
+      this.loadVideo();
+      return this.queueAction("setPlaybackRate", this.videoAPI.setPlaybackRate, rate);
     }
 
     return this.queueAction("setPlaybackRate", this.videoAPI.setPlaybackRate, rate)
@@ -222,8 +222,8 @@ export class VideoPlayer {
 
   public startVideo(): Promise<VideoAPI> {
     if (this.videoAPI === undefined) {
-      return this.loadVideo()
-      .then(() => this.queueAction("startVideo", this.videoAPI.startVideo));
+      this.loadVideo();
+      return this.queueAction("startVideo", this.videoAPI.startVideo);
     }
 
     return this.queueAction("startVideo", this.videoAPI.startVideo);
@@ -231,8 +231,8 @@ export class VideoPlayer {
 
   public stopVideo(): Promise<VideoAPI> {
     if (this.videoAPI === undefined) {
-      return this.loadVideo()
-      .then(() => this.queueAction("stopVideo", this.videoAPI.stopVideo));
+      this.loadVideo();
+      return this.queueAction("stopVideo", this.videoAPI.stopVideo);
     }
 
     return this.queueAction("stopVideo", this.videoAPI.stopVideo);

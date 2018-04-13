@@ -156,43 +156,43 @@ class VideoPlayer {
     }
     pauseVideo() {
         if (this.videoAPI === undefined) {
-            return this.loadVideo()
-                .then(() => this.queueAction("pauseVideo", this.videoAPI.pauseVideo));
+            this.loadVideo(); //Queue a load action
+            return this.queueAction("pauseVideo", this.videoAPI.pauseVideo);
         }
         return this.queueAction("pauseVideo", this.videoAPI.pauseVideo);
     }
     playOrPauseVideo() {
         if (this.videoAPI === undefined) {
-            return this.loadVideo()
-                .then(() => this.queueAction("playOrPauseVideo", this.videoAPI.playOrPauseVideo));
+            this.loadVideo();
+            return this.queueAction("playOrPauseVideo", this.videoAPI.playOrPauseVideo);
         }
         return this.queueAction("playOrPauseVideo", this.videoAPI.playOrPauseVideo);
     }
     seekVideo(position) {
         if (this.videoAPI === undefined) {
-            return this.loadVideo()
-                .then(() => this.queueAction("seekVideo", this.videoAPI.seekVideo, position));
+            this.loadVideo();
+            return this.queueAction("seekVideo", this.videoAPI.seekVideo, position);
         }
         return this.queueAction("seekVideo", this.videoAPI.seekVideo, position);
     }
     setPlaybackRate(rate) {
         if (this.videoAPI === undefined) {
-            return this.loadVideo()
-                .then(() => this.queueAction("setPlaybackRate", this.videoAPI.setPlaybackRate, rate));
+            this.loadVideo();
+            return this.queueAction("setPlaybackRate", this.videoAPI.setPlaybackRate, rate);
         }
         return this.queueAction("setPlaybackRate", this.videoAPI.setPlaybackRate, rate);
     }
     startVideo() {
         if (this.videoAPI === undefined) {
-            return this.loadVideo()
-                .then(() => this.queueAction("startVideo", this.videoAPI.startVideo));
+            this.loadVideo();
+            return this.queueAction("startVideo", this.videoAPI.startVideo);
         }
         return this.queueAction("startVideo", this.videoAPI.startVideo);
     }
     stopVideo() {
         if (this.videoAPI === undefined) {
-            return this.loadVideo()
-                .then(() => this.queueAction("stopVideo", this.videoAPI.stopVideo));
+            this.loadVideo();
+            return this.queueAction("stopVideo", this.videoAPI.stopVideo);
         }
         return this.queueAction("stopVideo", this.videoAPI.stopVideo);
     }
