@@ -508,8 +508,9 @@ export class YouTubeVideo extends VideoAPI {
   /** Create a single-use state change handler */
   private setStateChangeHandler(event: string, actionId: string, handler: (ytv: YouTubeVideo, event: YT.PlayerEvent) => void): void {
     if (this.stateChangeHandlersReservations[event] !== undefined) {
-      throw new StateChangeHandlerReservedException(this.logCtx(actionId, event,
-        `Handler already used by Promise=${this.stateChangeHandlersReservations[event]} and waiting for fulfillment from YouTube IFrame Player`));
+      logger.error(new StateChangeHandlerReservedException(this.logCtx(actionId, event,
+        `Handler already used by Promise=${this.stateChangeHandlersReservations[event]} and waiting for fulfillment from YouTube IFrame Player`))
+      );
     }
     this.stateChangeHandlersReservations[event] = actionId;
     this.stateChangeHandlers[event] = handler;
@@ -526,7 +527,7 @@ export class YouTubeVideo extends VideoAPI {
       if (this.stateChangeHandlers[event] === undefined) {
         err += `No handler for event=${event}. `;
       }
-      throw new StateChangeHandlerReservedException(this.logCtx(actionId, event, err));
+      logger.error(new StateChangeHandlerReservedException(this.logCtx(actionId, event, err)));
     }
     this.stateChangeHandlersReservations[event] = undefined;
     this.stateChangeHandlers[event] = undefined;
