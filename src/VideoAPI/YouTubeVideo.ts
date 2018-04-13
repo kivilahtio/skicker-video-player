@@ -82,30 +82,36 @@ export class YouTubeVideo extends VideoAPI {
     if (this.ytPlayer) {
       return this.ytPlayer.getDuration();
     }
-
     return undefined;
   }
 
-  public getPlaybackRate(): number {
-    return this.ytPlayer.getPlaybackRate();
+  public getPlaybackRate(): number | undefined {
+    if (this.ytPlayer) {
+      return this.ytPlayer.getPlaybackRate();
+    }
+    return undefined;
   }
 
   public getPosition(): number | undefined {
     if (this.ytPlayer) {
       return this.ytPlayer.getCurrentTime();
     }
-
     return undefined;
   }
 
   public getStatus(): VideoPlayerStatus {
-    const stateName: string = this.translatePlayerStateEnumToString(this.ytPlayer.getPlayerState());
-
-    return stateName as VideoPlayerStatus;
+    if (this.ytPlayer) {
+      const stateName: string = this.translatePlayerStateEnumToString(this.ytPlayer.getPlayerState());
+      return stateName as VideoPlayerStatus;
+    }
+    return VideoPlayerStatus.notLoaded;
   }
 
-  public getVolume(): number {
-    return this.ytPlayer.getVolume();
+  public getVolume(): number | undefined {
+    if (this.ytPlayer) {
+      return this.ytPlayer.getVolume();
+    }
+    return undefined;
   }
 
   public loadVideo(actionId: string, videoId:string, options?: IVideoAPIOptions): Promise<YouTubeVideo> {

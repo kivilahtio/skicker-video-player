@@ -70,10 +70,10 @@ describe("VideoPlayer, ", () => {
 
   describe("VideoPlayer accessors, ", () => {
     it("getDuration() when video not loaded", () => {
-      expect(videoPlayer.getDuration()).toBe(-1);
+      expect(videoPlayer.getDuration()).toBe(undefined);
     });
     it("getPosition() when video not loaded", () => {
-      expect(videoPlayer.getPosition()).toBe(-1);
+      expect(videoPlayer.getPosition()).toBe(undefined);
     });
     it("getStatus() when video not loaded", () => {
       expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.notLoaded);

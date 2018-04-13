@@ -35,14 +35,14 @@ export declare class VideoPlayer {
     /**
      * Returns -1 if videoAPI has not been loaded
      */
-    getDuration(): number;
+    getDuration(): number | undefined;
     /** Returns the options given */
     getOptions(): IVideoAPIOptions;
-    getPlaybackRate(): number;
+    getPlaybackRate(): number | undefined;
     /**
      * Returns -1 if videoAPI has not been loaded
      */
-    getPosition(): number;
+    getPosition(): number | undefined;
     /** Get the container for this VideoPlayer */
     getRootElement(): HTMLElement;
     /**

@@ -69,12 +69,12 @@ export class VideoPlayer {
   /**
    * Returns -1 if videoAPI has not been loaded
    */
-  public getDuration(): number {
+  public getDuration(): number | undefined {
     if (this.videoAPI) {
       return this.videoAPI.getDuration();
     }
 
-    return -1;
+    return undefined;
   }
 
   /** Returns the options given */
@@ -82,23 +82,22 @@ export class VideoPlayer {
     return this.options;
   }
 
-  public getPlaybackRate(): number {
+  public getPlaybackRate(): number | undefined {
     if (this.videoAPI) {
       return this.videoAPI.getPlaybackRate();
     }
 
-    return 1;
+    return undefined;
   }
 
   /**
    * Returns -1 if videoAPI has not been loaded
    */
-  public getPosition(): number {
+  public getPosition(): number | undefined {
     if (this.videoAPI) {
       return this.videoAPI.getPosition();
     }
-
-    return -1;
+    return undefined;
   }
 
   /** Get the container for this VideoPlayer */
@@ -111,11 +110,8 @@ export class VideoPlayer {
    */
   public getStatus(): VideoPlayerStatus {
     if (this.videoAPI) {
-      logger.debug(`getStatus():> returning ${this.videoAPI.getStatus()}`);
       return this.videoAPI.getStatus();
     }
-
-    logger.debug(`getStatus():> returning ${VideoPlayerStatus.notLoaded}`);
     return VideoPlayerStatus.notLoaded;
   }
 

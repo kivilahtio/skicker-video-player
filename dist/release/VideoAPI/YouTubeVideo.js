@@ -55,7 +55,10 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
         return undefined;
     }
     getPlaybackRate() {
-        return this.ytPlayer.getPlaybackRate();
+        if (this.ytPlayer) {
+            return this.ytPlayer.getPlaybackRate();
+        }
+        return undefined;
     }
     getPosition() {
         if (this.ytPlayer) {
@@ -64,11 +67,17 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
         return undefined;
     }
     getStatus() {
-        const stateName = this.translatePlayerStateEnumToString(this.ytPlayer.getPlayerState());
-        return stateName;
+        if (this.ytPlayer) {
+            const stateName = this.translatePlayerStateEnumToString(this.ytPlayer.getPlayerState());
+            return stateName;
+        }
+        return VideoAPI_1.VideoPlayerStatus.notLoaded;
     }
     getVolume() {
-        return this.ytPlayer.getVolume();
+        if (this.ytPlayer) {
+            return this.ytPlayer.getVolume();
+        }
+        return undefined;
     }
     loadVideo(actionId, videoId, options) {
         const ctx = "loadVideo";

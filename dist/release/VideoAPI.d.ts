@@ -43,12 +43,12 @@ export declare abstract class VideoAPI {
     private videoUrl;
     abstract destroy(): void;
     /** Returns the duration of the video in seconds */
-    abstract getDuration(): number;
-    abstract getPlaybackRate(): number;
+    abstract getDuration(): number | undefined;
+    abstract getPlaybackRate(): number | undefined;
     /** Returns the current position in seconds in the currently played video. Decimals denote millisecond precision */
-    abstract getPosition(): number;
+    abstract getPosition(): number | undefined;
     abstract getStatus(): VideoPlayerStatus;
-    abstract getVolume(): number;
+    abstract getVolume(): number | undefined;
     abstract loadVideo(actionId: string, videoId: string, options?: IVideoAPIOptions): Promise<VideoAPI>;
     abstract pauseVideo(actionId: string): Promise<VideoAPI>;
     abstract playOrPauseVideo(actionId: string): Promise<VideoAPI>;

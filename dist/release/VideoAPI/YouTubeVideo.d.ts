@@ -33,10 +33,10 @@ export declare class YouTubeVideo extends VideoAPI {
      */
     destroy(): void;
     getDuration(): number | undefined;
-    getPlaybackRate(): number;
+    getPlaybackRate(): number | undefined;
     getPosition(): number | undefined;
     getStatus(): VideoPlayerStatus;
-    getVolume(): number;
+    getVolume(): number | undefined;
     loadVideo(actionId: string, videoId: string, options?: IVideoAPIOptions): Promise<YouTubeVideo>;
     /**
      * https://developers.google.com/youtube/iframe_api_reference#pauseVideo
