@@ -7,6 +7,7 @@ import { VideoPlayer } from "../src/VideoPlayer";
 import { BadParameterException } from "../src/Exception/BadParameter";
 import { UnknownVideoSourceException } from "../src/Exception/UnknownVideoSource";
 import * as dom from "./helpers/dom";
+import * as tu from "./helpers/testutils";
 
 import { LoggerManager } from "skicker-logger-manager";
 const logger = LoggerManager.getLogger("Skicker.test.01");
@@ -54,50 +55,97 @@ describe("VideoPlayer URL parsing,", () => {
   });
 });
 
-describe("VideoPlayer accessors", () => {
+describe("VideoPlayer, ", () => {
   let videoPlayer: VideoPlayer;
 
   it("Init VideoPlayer", () => {
     logger.info("Init VideoPlayer");
-    videoPlayer = new VideoPlayer(vpElement, {}, new URL("https://www.youtube.com/watch?v=d1mX_MBz0HU"));
+    videoPlayer = tu.createPlayer(new URL('https://www.youtube.com/watch?v=d1mX_MBz0HU'),
+                                  {},
+                                  undefined
+    );
     expect(videoPlayer.getVideoId())
     .toEqual("d1mX_MBz0HU");
   });
 
-  it("getDuration() when video not loaded", () => {
-    expect(videoPlayer.getDuration()).toBe(-1);
-  });
-  it("getPosition() when video not loaded", () => {
-    expect(videoPlayer.getPosition()).toBe(-1);
-  });
-  it("getStatus() when video not loaded", () => {
-    expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.notLoaded);
-  });
+  describe("VideoPlayer accessors, ", () => {
+    it("getDuration() when video not loaded", () => {
+      expect(videoPlayer.getDuration()).toBe(-1);
+    });
+    it("getPosition() when video not loaded", () => {
+      expect(videoPlayer.getPosition()).toBe(-1);
+    });
+    it("getStatus() when video not loaded", () => {
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.notLoaded);
+    });
 
-  it("load video", () =>{
-    logger.info("load video");
-    return videoPlayer.loadVideo()
-    .then((vapi: VideoAPI) => {
-      expect(vapi.getStatus()).toBe(VideoPlayerStatus.videoCued);
+    it("load video", () => {
+      logger.info("load video");
+      return videoPlayer.loadVideo()
+      .then((vapi: VideoAPI) => {
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.videoCued);
+      });
+    });
+
+    it("VideoPlayer injected into the given HTML element", () => {
+      expect(
+        $("#youtube-video-player0")
+        .prop("nodeName")
+      )
+      .toEqual("IFRAME");
+    });
+
+    it("getDuration() when video is loaded", () => {
+      expect(videoPlayer.getDuration()).toBe(3923);
+    });
+    it("getPosition() when video is loaded", () => {
+      expect(videoPlayer.getPosition()).toBe(0);
+    });
+    it("getStatus() when video is loaded", () => {
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.videoCued);
     });
   });
 
-  it("getDuration() when video is loaded", () => {
-    expect(videoPlayer.getDuration()).toBe(3923);
-  });
-  it("getPosition() when video is loaded", () => {
-    expect(videoPlayer.getPosition()).toBe(0);
-  });
-  it("getStatus() when video is loaded", () => {
-    expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.videoCued);
+  describe("VideoPlayer pausing, ", () => {
+    it("Pause when Video is cued, this causes nothing to happen", () => {
+      logger.info("Pause when Video is cued");
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.videoCued);
+      return videoPlayer.pauseVideo()
+      .then((vapi: VideoAPI) => {
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.videoCued);
+      });
+    });
+
+    it("Stop when Video is cued", () => {
+      logger.info("Stop when Video is cued");
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.videoCued);
+      return tu.stop();
+    });
+
+    it("Start when Video is cued", () => {
+      logger.info("Start when Video is cued");
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.videoCued);
+      return tu.start();
+    });
+
+    it("Stop when Video is playing", () => {
+      logger.info("Stop when Video is playing");
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.playing);
+      return tu.stop();
+    });
+
+    it("Pause when Video is stopped, this causes nothing to happen", () => {
+      logger.info("Pause when Video is stopped");
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.unstarted);
+      return videoPlayer.pauseVideo()
+      .then((vapi: VideoAPI) => {
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.unstarted);
+      });
+    });
   });
 
-  it("Destroy the video player,", () => {
-    logger.info("Destroy the video player");
-    videoPlayer
-    .destroy();
-    expect($(vpElement)
-            .find("*").length)
-    .toBe(0);
+  it("Destroy", () => {
+    logger.info("Destroy");
+    tu.destroy();
   });
 });

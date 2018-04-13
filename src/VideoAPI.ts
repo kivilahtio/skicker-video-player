@@ -56,15 +56,15 @@ export abstract class VideoAPI {
   public abstract getPosition(): number;
   public abstract getStatus(): VideoPlayerStatus;
   public abstract getVolume(): number;
-  public abstract loadVideo(videoId: string, options?: IVideoAPIOptions): Promise<VideoAPI>;
-  public abstract pauseVideo(): Promise<VideoAPI>;
-  public abstract playOrPauseVideo(): Promise<VideoAPI>;
+  public abstract loadVideo(actionId: string, videoId: string, options?: IVideoAPIOptions): Promise<VideoAPI>;
+  public abstract pauseVideo(actionId: string): Promise<VideoAPI>;
+  public abstract playOrPauseVideo(actionId: string): Promise<VideoAPI>;
   /**
    * @param position time in seconds where to seek to? Use decimals to reach millisecond precision.
    */
-  public abstract seekVideo(position: number): Promise<VideoAPI>;
-  public abstract setPlaybackRate(playbackRate: number): Promise<VideoAPI>;
+  public abstract seekVideo(actionId: string, position: number): Promise<VideoAPI>;
+  public abstract setPlaybackRate(actionId: string, playbackRate: number): Promise<VideoAPI>;
   public abstract setVolume(volume: number): void;
-  public abstract startVideo(): Promise<VideoAPI>;
-  public abstract stopVideo(): Promise<VideoAPI>;
+  public abstract startVideo(actionId: string): Promise<VideoAPI>;
+  public abstract stopVideo(actionId: string): Promise<VideoAPI>;
 }

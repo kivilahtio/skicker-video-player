@@ -8,12 +8,6 @@ import { IVideoAPIOptions, VideoAPI, VideoPlayerStatus } from "../VideoAPI";
  * Implements the YouTube IFrame Video Player API, wrapping it into nice promises
  */
 export declare class YouTubeVideo extends VideoAPI {
-    /**
-     * How long does each Promise created in this class take to timeout?
-     * This is used to protect and catch against leaking promises that never resolve.
-     * Time unit in ms
-     */
-    promiseSafetyTimeout: number;
     private static ytPlayerStates;
     private availablePlaybackRates;
     private options;
@@ -43,36 +37,36 @@ export declare class YouTubeVideo extends VideoAPI {
     getPosition(): number | undefined;
     getStatus(): VideoPlayerStatus;
     getVolume(): number;
-    loadVideo(videoId: string, options?: IVideoAPIOptions): Promise<YouTubeVideo>;
+    loadVideo(actionId: string, videoId: string, options?: IVideoAPIOptions): Promise<YouTubeVideo>;
     /**
      * https://developers.google.com/youtube/iframe_api_reference#pauseVideo
      */
-    pauseVideo(): Promise<YouTubeVideo>;
-    playOrPauseVideo(): Promise<YouTubeVideo>;
+    pauseVideo(actionId: string): Promise<YouTubeVideo>;
+    playOrPauseVideo(actionId: string): Promise<YouTubeVideo>;
     /**
      *  Seeking is a bit tricky since we need to be in the proper state. Otherwise we get strange errors and behaviour from YouTube Player.
      *  If not in playing or paused -states, forcibly move there.
      */
-    seekVideo(position: number): Promise<YouTubeVideo>;
+    seekVideo(actionId: string, position: number): Promise<YouTubeVideo>;
     /**
      * Sets the playback rate to the nearest available rate YouTube player supports.
      *
      * @param playbackRate Desired playback rate, if not given, value in this.options.rate is used.
      */
-    setPlaybackRate(playbackRate?: number): Promise<YouTubeVideo>;
+    setPlaybackRate(actionId: string, playbackRate?: number): Promise<YouTubeVideo>;
     /**
      * @param volume Volume level. 0 sets the player muted
      */
     setVolume(volume: number): void;
-    startVideo(): Promise<YouTubeVideo>;
-    stopVideo(): Promise<YouTubeVideo>;
+    startVideo(actionId: string): Promise<YouTubeVideo>;
+    stopVideo(actionId: string): Promise<YouTubeVideo>;
     /**
      * Translate a number-based enumeration to a human readable state. Useful for logging.
      * @param state State received from the YT.Player.getPlayerState()
      */
     translatePlayerStateEnumToString(state: YT.PlayerState): string;
     /** Just seek with no safety checks */
-    private _seekVideo(position);
+    private _seekVideo(actionId, position);
     /**
      * Check if the desired rate is in the list of allowed playback rates, if not, raise an exception
      *
@@ -83,12 +77,12 @@ export declare class YouTubeVideo extends VideoAPI {
     /**
      * 3. This function creates an <iframe> (and YouTube player) after the API code downloads.
      */
-    private createPlayer(videoId);
+    private createPlayer(actionId, videoId);
     /**
      * 2. This code loads the IFrame Player API code asynchronously.
      * Makes sure the API code is loaded once even when using multiple players on the same document
      */
-    private initIFrameAPI();
+    private initIFrameAPI(actionId);
     /**
      * Pass in default handlers for various YouTube IFrame Player events if none supplied
      *
@@ -98,18 +92,8 @@ export declare class YouTubeVideo extends VideoAPI {
     private injectDefaultHandlers(resolve, reject);
     private translateIVideoAPIOptionsToYTPlayerOptions(opts);
     /** Create a single-use state change handler */
-    private setStateChangeHandler(event, promiseId, handler);
+    private setStateChangeHandler(event, actionId, handler);
     /** One must call this to mark a stateChangeHandler resolved */
-    private stateChangeHandlerFulfilled(event, promiseId);
-    private logCtx(promiseId?, ctx?, message?);
-    /** Get a random string intended to track down individual promises */
-    private getPromiseId();
-    /**
-     * Wraps a promise into identifiable log output and timeout to catch stray promises
-     * @param ctx Context describing where this promise is used, like "startVideo"
-     * @param promiseId temporarily unique identifier for this Promise, used to help finding out the order of events related
-     *                  to a singular Promise from the log output.
-     * @param callback The function to promisify
-     */
-    private promisify<G>(ctx, callback, promiseId?);
+    private stateChangeHandlerFulfilled(event, actionId);
+    private logCtx(actionId?, ctx?, message?);
 }

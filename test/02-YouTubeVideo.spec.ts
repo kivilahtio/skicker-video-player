@@ -4,53 +4,47 @@ import * as $ from "jquery";
 import { YouTubeVideo } from "../src/VideoAPI/YouTubeVideo";
 import { SupportedVideoAPIs, VideoAPI } from "../src/VideoAPI";
 import { VideoPlayer } from "../src/VideoPlayer";
-import * as dom from "./helpers/dom";
+import * as tu from "./helpers/testutils";
+
+import { LoggerManager } from "skicker-logger-manager";
+const logger = LoggerManager.getLogger("Skicker.test.02");
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-const vpElement: HTMLElement = dom.appendBodyElement("div", "youtube-video-player", "video-player");
-
 describe("YouTube video URL parsing,", () => {
   it("https://youtu.be/BrW89n0Hss4", () => {
-    const vp = new VideoPlayer(vpElement, {}, new URL("https://youtu.be/BrW89n0Hss4"));
-    expect(vp)
-    .toBeTruthy();
+    const vp: VideoPlayer = tu.createPlayer(new URL("https://youtu.be/BrW89n0Hss4"), {}, undefined);
     expect(vp.getVideoId())
     .toEqual("BrW89n0Hss4");
   });
 
   it("https://www.youtube.com/watch?v=C0DPdy98e4c", () => {
-    const vp = new VideoPlayer(vpElement, {}, new URL("https://www.youtube.com/watch?v=C0DPdy98e4c"));
-    expect(vp)
-    .toBeTruthy();
+    const vp: VideoPlayer = tu.createPlayer(new URL("https://www.youtube.com/watch?v=C0DPdy98e4c"), {}, undefined);
     expect(vp.getVideoId())
     .toEqual("C0DPdy98e4c");
   });
 
 });
 
-describe("VideoPlayer rate validation", () => {
+describe("YouTube playback rate validation", () => {
+  let vp: VideoPlayer;
 
-  const ytVideo: YouTubeVideo = new YouTubeVideo(vpElement);
-
-  beforeAll((done) => {
-    ytVideo.loadVideo("C0DPdy98e4c")
-    .then(done)
-    .catch((err: any) => {
-      fail(`Loading a YouTube video failed because of\n${err.toString()}`);
-    });
+  it("Instantiate and load a new VideoPlayer", () => {
+    logger.info("Instantiate a new VideoPlayer");
+    vp = tu.createPlayer(new URL('https://www.youtube.com/watch?v=C0DPdy98e4c'), {}, undefined);
+    return vp.loadVideo();
   });
 
   it("Rate is supported", () =>
-    ytVideo.setPlaybackRate(2)
+    vp.setPlaybackRate(2)
     .then(() => {
-      expect(ytVideo.getPlaybackRate())
+      expect(vp.getPlaybackRate())
       .toBe(2);
     }),
   );
 
   it("Rate is UNsupported", () =>
-    ytVideo.setPlaybackRate(2.5)
+    vp.setPlaybackRate(2.5)
     .then(() => {
       expect("setPlaybackRate(2.5) should throw an error!")
       .toEqual("But it didn't");
@@ -64,7 +58,7 @@ describe("VideoPlayer rate validation", () => {
   );
 
   afterAll((done) => {
-    ytVideo.destroy();
+    tu.destroy();
     done();
   });
 

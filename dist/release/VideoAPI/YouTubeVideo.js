@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 const VideoAPI_1 = require("../VideoAPI");
 const BadPlaybackRate_1 = require("../Exception/BadPlaybackRate");
-const PromiseTimeout_1 = require("../Exception/PromiseTimeout");
 const UnknownState_1 = require("../Exception/UnknownState");
 const skicker_logger_manager_1 = require("skicker-logger-manager");
 const StateChangeHandlerReserved_1 = require("../Exception/StateChangeHandlerReserved");
@@ -22,12 +21,6 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
      */
     constructor(rootElement, options) {
         super();
-        /**
-         * How long does each Promise created in this class take to timeout?
-         * This is used to protect and catch against leaking promises that never resolve.
-         * Time unit in ms
-         */
-        this.promiseSafetyTimeout = process.env.NODE_ENV === "testing" ? 95000 : 20000;
         this.options = {};
         this.stateChangeHandlers = {};
         /**
@@ -77,80 +70,89 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
     getVolume() {
         return this.ytPlayer.getVolume();
     }
-    loadVideo(videoId, options) {
-        logger.debug(`loadVideo():> params videoId=${videoId}, options=`, options);
+    loadVideo(actionId, videoId, options) {
+        const ctx = "loadVideo";
+        logger.debug(this.logCtx(actionId, ctx, `params videoId=${videoId}`));
         if (options) {
             Object.assign(this.options, options); // Merge options from the constructor with the new options, atleast the videoId must be given.
         }
-        return this.initIFrameAPI()
-            .then((res) => this.createPlayer(videoId))
-            .then((res) => {
+        return this.initIFrameAPI(actionId)
+            .then(() => this.createPlayer(actionId, videoId))
+            .then(() => this.setPlaybackRate(actionId))
+            .then((vapi) => {
             if (this.options.volume) {
                 this.setVolume(this.options.volume);
             }
-            return this.setPlaybackRate();
+            return this;
         });
     }
     /**
      * https://developers.google.com/youtube/iframe_api_reference#pauseVideo
      */
-    pauseVideo() {
+    pauseVideo(actionId) {
         const ctx = "pauseVideo";
-        logger.debug(`${ctx}():>`);
-        if (this.getStatus() === VideoAPI_1.VideoPlayerStatus.ended ||
-            this.getStatus() === VideoAPI_1.VideoPlayerStatus.paused) {
-            logger.info(`${ctx}():> Video already ${this.getStatus()}`);
-            return Promise.resolve(this);
-        }
-        const promiseId = this.getPromiseId();
-        return this.promisify(`${ctx}():> `, (resolve, reject) => {
-            this.setStateChangeHandler("paused", promiseId, (ytv, event) => {
-                logger.debug(this.logCtx(promiseId, ctx, "stateChangeHandlers.paused():> Play paused"));
-                this.stateChangeHandlerFulfilled("paused", promiseId);
+        logger.debug(this.logCtx(actionId, ctx));
+        return new Promise((resolve, reject) => {
+            const status = this.getStatus();
+            if (status === VideoAPI_1.VideoPlayerStatus.ended ||
+                status === VideoAPI_1.VideoPlayerStatus.paused ||
+                status === VideoAPI_1.VideoPlayerStatus.videoCued ||
+                status === VideoAPI_1.VideoPlayerStatus.unstarted) {
+                logger.info(this.logCtx(actionId, ctx, `Video already ${status}`));
+                resolve(this);
+            }
+            this.setStateChangeHandler("paused", actionId, (ytv, event) => {
+                logger.debug(this.logCtx(actionId, ctx, "stateChangeHandlers.paused():> Play paused"));
+                this.stateChangeHandlerFulfilled("paused", actionId);
                 resolve(this);
             });
             this.ytPlayer.pauseVideo();
-        }, promiseId);
+        });
     }
-    playOrPauseVideo() {
+    playOrPauseVideo(actionId) {
         const ctx = "playOrPauseVideo";
-        logger.debug(`${ctx}():>`);
+        logger.debug(this.logCtx(actionId, ctx));
         if (this.ytPlayer === undefined) {
             return Promise.reject(new UnknownState_1.UnknownStateException("YouTube Player not instantiated"));
         }
         else if (this.getStatus() === VideoAPI_1.VideoPlayerStatus.playing) {
-            return this.pauseVideo();
+            return this.pauseVideo(actionId);
         }
         else {
-            return this.startVideo();
+            return this.startVideo(actionId);
         }
     }
     /**
      *  Seeking is a bit tricky since we need to be in the proper state. Otherwise we get strange errors and behaviour from YouTube Player.
      *  If not in playing or paused -states, forcibly move there.
      */
-    seekVideo(position) {
-        const ctx = "seekVideo";
-        const status = this.getStatus();
-        logger.debug(`${ctx}():> position:`, position, "status:", status);
-        if (status === VideoAPI_1.VideoPlayerStatus.paused || status === VideoAPI_1.VideoPlayerStatus.playing || status === VideoAPI_1.VideoPlayerStatus.buffering) {
-            //These statuses are ok to seek from
-            return this._seekVideo(position);
-        }
-        else {
-            if (this.ytPlayer === undefined) {
-                return Promise.reject(new UnknownState_1.UnknownStateException("YouTube player not loaded with a video yet. Cannot seek before loading a video."));
+    seekVideo(actionId, position) {
+        try {
+            const ctx = "seekVideo";
+            const status = this.getStatus();
+            logger.debug(this.logCtx(actionId, ctx, `position:${position}, status:${status}`));
+            if (status === VideoAPI_1.VideoPlayerStatus.paused || status === VideoAPI_1.VideoPlayerStatus.playing || status === VideoAPI_1.VideoPlayerStatus.buffering) {
+                //These statuses are ok to seek from
+                return this._seekVideo(actionId, position);
             }
-            logger.debug(`${ctx}():> VideoPlayer not started yet, so start/stop first to workaround a bug. position:`, position, "status:", status);
-            //These statuses are not ok. Mute+Play+Pause to get into the desired position to be able to seek.
-            const oldVol = this.getVolume();
-            this.setVolume(0);
-            return this.startVideo()
-                .then((player) => this.pauseVideo())
-                .then((player) => {
-                this.setVolume(oldVol);
-                return this._seekVideo(position);
-            });
+            else {
+                if (this.ytPlayer === undefined) {
+                    return Promise.reject(new UnknownState_1.UnknownStateException("YouTube player not loaded with a video yet. Cannot seek before loading a video."));
+                }
+                logger.debug(this.logCtx(actionId, ctx, `VideoPlayer not started yet, so start/stop first to workaround a bug. position:${position}, status:${status}`));
+                //These statuses are not ok. Mute+Play+Pause to get into the desired position to be able to seek.
+                const oldVol = this.getVolume();
+                this.setVolume(0);
+                return this.startVideo(actionId)
+                    .then((player) => this.pauseVideo(actionId))
+                    .then((player) => {
+                    this.setVolume(oldVol);
+                    return this._seekVideo(actionId, position);
+                });
+            }
+        }
+        catch (err) {
+            return Promise.reject(err);
         }
     }
     /**
@@ -158,27 +160,26 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
      *
      * @param playbackRate Desired playback rate, if not given, value in this.options.rate is used.
      */
-    setPlaybackRate(playbackRate) {
+    setPlaybackRate(actionId, playbackRate) {
         const ctx = "setPlaybackRate";
         const rate = playbackRate || this.options.rate;
         if (rate) {
-            logger.debug(`${ctx}():> params playbackRate=${playbackRate}, this.options.rate=${this.options.rate}`);
+            logger.debug(this.logCtx(actionId, ctx, `params playbackRate=${playbackRate}, this.options.rate=${this.options.rate}`));
             const oldRate = this.ytPlayer.getPlaybackRate();
             if (rate === oldRate) {
-                logger.debug(`${ctx}():> rate=${playbackRate} is the same as the current playback rate.`);
+                logger.debug(this.logCtx(actionId, ctx, `rate=${playbackRate} is the same as the current playback rate.`));
                 return Promise.resolve(this);
             }
-            const promiseId = this.getPromiseId();
-            return this.promisify(ctx, ((resolve, reject) => {
+            return new Promise((resolve, reject) => {
                 this.checkPlaybackRate(rate);
-                this.setStateChangeHandler("onPlaybackRateChange", promiseId, (ytv, event) => {
+                this.setStateChangeHandler("onPlaybackRateChange", actionId, (ytv, event) => {
                     const newRate = this.ytPlayer.getPlaybackRate();
-                    logger.debug(this.logCtx(promiseId, ctx, `stateChangeHandlers.onPlaybackRateChange():> Playback rate changed from ${oldRate} to ${newRate}. Requested ${rate}`));
-                    this.stateChangeHandlerFulfilled("onPlaybackRateChange", promiseId);
+                    logger.debug(this.logCtx(actionId, ctx, `stateChangeHandlers.onPlaybackRateChange():> Playback rate changed from ${oldRate} to ${newRate}. Requested ${rate}`));
+                    this.stateChangeHandlerFulfilled("onPlaybackRateChange", actionId);
                     resolve(this);
                 });
                 this.ytPlayer.setPlaybackRate(rate);
-            }), promiseId);
+            });
         }
         else {
             return Promise.resolve(this);
@@ -199,35 +200,33 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
             this.ytPlayer.setVolume(volume);
         }
     }
-    startVideo() {
+    startVideo(actionId) {
         const ctx = "startVideo";
-        logger.debug(`${ctx}():>`);
-        if (this.getStatus() === VideoAPI_1.VideoPlayerStatus.playing) {
-            logger.info(ctx + "():> Video already " + this.getStatus());
-            return Promise.resolve(this);
-        }
-        const promiseId = this.getPromiseId();
-        return this.promisify(ctx, ((resolve, reject) => {
-            this.setStateChangeHandler("playing", promiseId, (ytv, event) => {
-                logger.debug(this.logCtx(promiseId, ctx, "stateChangeHandlers.playing():> Play started"));
-                this.stateChangeHandlerFulfilled("playing", promiseId);
+        logger.debug(this.logCtx(actionId, ctx));
+        return new Promise((resolve, reject) => {
+            if (this.getStatus() === VideoAPI_1.VideoPlayerStatus.playing) {
+                logger.info(this.logCtx(actionId, ctx, `Video already status=${this.getStatus()}`));
+                resolve(this);
+            }
+            this.setStateChangeHandler("playing", actionId, (ytv, event) => {
+                logger.debug(this.logCtx(actionId, ctx, "stateChangeHandlers.playing():> Play started"));
+                this.stateChangeHandlerFulfilled("playing", actionId);
                 resolve(this);
             });
             this.ytPlayer.playVideo();
-        }), promiseId);
+        });
     }
-    stopVideo() {
+    stopVideo(actionId) {
         const ctx = "stopVideo";
-        logger.debug(`${ctx}():>`);
-        const promiseId = this.getPromiseId();
-        return this.promisify(ctx, ((resolve, reject) => {
-            this.setStateChangeHandler("unstarted", promiseId, (ytv, event) => {
-                logger.debug(this.logCtx(promiseId, ctx, `stateChangeHandlers.${this.getStatus()}():> Play unstarted(stopped)`));
-                this.stateChangeHandlerFulfilled("unstarted", promiseId);
+        logger.debug(this.logCtx(actionId, ctx));
+        return new Promise((resolve, reject) => {
+            this.setStateChangeHandler("unstarted", actionId, (ytv, event) => {
+                logger.debug(this.logCtx(actionId, ctx, `stateChangeHandlers.${this.getStatus()}():> Play unstarted(stopped)`));
+                this.stateChangeHandlerFulfilled("unstarted", actionId);
                 resolve(this);
             });
             this.ytPlayer.stopVideo();
-        }), promiseId);
+        });
     }
     /**
      * Translate a number-based enumeration to a human readable state. Useful for logging.
@@ -244,12 +243,11 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
         }
     }
     /** Just seek with no safety checks */
-    _seekVideo(position) {
+    _seekVideo(actionId, position) {
         const oldStatus = this.getStatus();
         const ctx = "_seekVideo";
-        logger.debug(`${ctx}():> position:`, position, "status:", oldStatus);
-        const promiseId = this.getPromiseId();
-        return this.promisify(ctx, (resolve, reject) => {
+        logger.debug(this.logCtx(actionId, ctx, `position:${position}, status:${oldStatus}`));
+        return new Promise((resolve, reject) => {
             // YouTube Player doesn't trigger onStatusChangeHandlers when seeking to an already buffered position in the video, when being paused.
             // Thus we cannot get a confirmation that the seeking was actually done.
             // Use a timeout to check if we are buffering, and if not, mark the seek as complete.
@@ -258,26 +256,26 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
                 oldStatus === VideoAPI_1.VideoPlayerStatus.playing) {
                 cancel = window.setTimeout(() => {
                     if (this.getStatus() !== VideoAPI_1.VideoPlayerStatus.buffering) {
-                        logger.debug(this.logCtx(promiseId, ctx, `stateChangeHandlers.${this.getStatus()}():> Position seeked without buffering from a ${oldStatus}-state`));
-                        this.stateChangeHandlerFulfilled(oldStatus, promiseId);
-                        //this.stateChangeHandlerFulfilled(VideoPlayerStatus.ended, promiseId); //It is possible to seek to the end
+                        logger.debug(this.logCtx(actionId, ctx, `stateChangeHandlers.${this.getStatus()}():> Position seeked without buffering from a ${oldStatus}-state`));
+                        this.stateChangeHandlerFulfilled(oldStatus, actionId);
+                        //this.stateChangeHandlerFulfilled(VideoPlayerStatus.ended, actionId); //It is possible to seek to the end
                         resolve(this);
                     }
                 }, 100);
             }
             const func = (ytv, event) => {
-                logger.debug(this.logCtx(promiseId, ctx, `stateChangeHandlers.${this.getStatus()}():> Position seeked`));
-                this.stateChangeHandlerFulfilled(oldStatus, promiseId);
-                //this.stateChangeHandlerFulfilled(VideoPlayerStatus.ended, promiseId); //It is possible to seek to the end
+                logger.debug(this.logCtx(actionId, ctx, `stateChangeHandlers.${this.getStatus()}():> Position seeked`));
+                this.stateChangeHandlerFulfilled(oldStatus, actionId);
+                //this.stateChangeHandlerFulfilled(VideoPlayerStatus.ended, actionId); //It is possible to seek to the end
                 if (cancel) {
                     window.clearTimeout(cancel);
                 }
                 resolve(this);
             };
-            this.setStateChangeHandler(oldStatus, promiseId, func);
-            //this.setStateChangeHandler(VideoPlayerStatus.ended, promiseId, func); //It is possible to seek to the end
+            this.setStateChangeHandler(oldStatus, actionId, func);
+            //this.setStateChangeHandler(VideoPlayerStatus.ended, actionId, func); //It is possible to seek to the end
             this.ytPlayer.seekTo(position, true);
-        }, promiseId);
+        });
     }
     /**
      * Check if the desired rate is in the list of allowed playback rates, if not, raise an exception
@@ -298,20 +296,19 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
     /**
      * 3. This function creates an <iframe> (and YouTube player) after the API code downloads.
      */
-    createPlayer(videoId) {
+    createPlayer(actionId, videoId) {
         const ctx = "createPlayer";
         if (!this.ytPlayer) {
-            const promiseId = this.getPromiseId();
-            return this.promisify(ctx, ((resolve, reject) => {
+            return new Promise((resolve, reject) => {
                 this.ytPlayerOptions = this.translateIVideoAPIOptionsToYTPlayerOptions(this.options);
                 this.ytPlayerOptions.videoId = videoId;
                 this.injectDefaultHandlers(resolve, reject); // This promise is resolved from the injected default onReady()-callback
-                logger.debug(this.logCtx(promiseId, ctx, `Creating a new player, videoId=${videoId}, elementId=${this.rootElement.id}, ytPlayerOptions=${this.ytPlayerOptions}`));
+                logger.debug(this.logCtx(actionId, ctx, `Creating a new player, videoId=${videoId}, elementId=${this.rootElement.id}, ytPlayerOptions=${this.ytPlayerOptions}`));
                 this.ytPlayer = new YT.Player(this.rootElement.id, this.ytPlayerOptions);
-            }), promiseId);
+            });
         }
         else {
-            logger.debug(`${ctx}():> Player exists, Promise resolved for videoId=`, videoId);
+            logger.debug(this.logCtx(actionId, ctx, `Player exists, Promise resolved for videoId=${videoId}`));
             return Promise.resolve(this);
         }
     }
@@ -319,26 +316,25 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
      * 2. This code loads the IFrame Player API code asynchronously.
      * Makes sure the API code is loaded once even when using multiple players on the same document
      */
-    initIFrameAPI() {
+    initIFrameAPI(actionId) {
         const ctx = "initIFrameAPI";
         if (!document.getElementById("youtube-iframe_api")) {
-            logger.debug(`${ctx}():>`);
+            logger.debug(this.logCtx(actionId, ctx));
             const tag = document.createElement("script");
             tag.setAttribute("src", "https://www.youtube.com/iframe_api");
             tag.setAttribute("id", "youtube-iframe_api");
             const firstScriptTag = document.getElementsByTagName("script")[0];
             firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-            const promiseId = this.getPromiseId();
-            return this.promisify(ctx, (resolve, reject) => {
+            return new Promise((resolve, reject) => {
                 // YouTube IFrame API signals intialization is complete
                 window.onYouTubeIframeAPIReady = () => {
-                    logger.debug(this.logCtx(promiseId, ctx, "onYouTubeIframeAPIReady():> IFrame API loaded, Promise resolved"));
+                    logger.debug(this.logCtx(actionId, ctx, "onYouTubeIframeAPIReady():> IFrame API loaded, Promise resolved"));
                     resolve(this);
                 };
-            }, promiseId);
+            });
         }
         // The external iframe source code has already been downloaded so skip redownload
-        logger.debug("initIFrameAPI():> IFrame API already loaded. Promise resolved");
+        logger.debug(this.logCtx(actionId, ctx, "IFrame API already loaded. Promise resolved"));
         return Promise.resolve(this);
     }
     /**
@@ -426,15 +422,15 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
         };
     }
     /** Create a single-use state change handler */
-    setStateChangeHandler(event, promiseId, handler) {
+    setStateChangeHandler(event, actionId, handler) {
         if (this.stateChangeHandlersReservations[event] !== undefined) {
-            throw new StateChangeHandlerReserved_1.StateChangeHandlerReservedException(this.logCtx(promiseId, event, `Handler already used by Promise=${this.stateChangeHandlersReservations[event]} and waiting for fulfillment from YouTube IFrame Player`));
+            throw new StateChangeHandlerReserved_1.StateChangeHandlerReservedException(this.logCtx(actionId, event, `Handler already used by Promise=${this.stateChangeHandlersReservations[event]} and waiting for fulfillment from YouTube IFrame Player`));
         }
-        this.stateChangeHandlersReservations[event] = promiseId;
+        this.stateChangeHandlersReservations[event] = actionId;
         this.stateChangeHandlers[event] = handler;
     }
     /** One must call this to mark a stateChangeHandler resolved */
-    stateChangeHandlerFulfilled(event, promiseId) {
+    stateChangeHandlerFulfilled(event, actionId) {
         if (this.stateChangeHandlersReservations[event] === undefined ||
             this.stateChangeHandlers[event] === undefined) {
             let err = "";
@@ -444,15 +440,15 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
             if (this.stateChangeHandlers[event] === undefined) {
                 err += `No handler for event=${event}. `;
             }
-            throw new StateChangeHandlerReserved_1.StateChangeHandlerReservedException(this.logCtx(promiseId, event, err));
+            throw new StateChangeHandlerReserved_1.StateChangeHandlerReservedException(this.logCtx(actionId, event, err));
         }
         this.stateChangeHandlersReservations[event] = undefined;
         this.stateChangeHandlers[event] = undefined;
     }
-    logCtx(promiseId, ctx, message) {
+    logCtx(actionId, ctx, message) {
         let sb = "";
-        if (promiseId !== undefined) {
-            sb += `Promise:${promiseId}:`;
+        if (actionId !== undefined) {
+            sb += `Promise:${actionId}:`;
         }
         if (ctx !== undefined) {
             sb += `${ctx}():> `;
@@ -461,38 +457,6 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
             sb += message;
         }
         return sb;
-    }
-    /** Get a random string intended to track down individual promises */
-    getPromiseId() {
-        return (Math.random() + 1).toString(36).substring(4); // A poor man's random string generator
-    }
-    /**
-     * Wraps a promise into identifiable log output and timeout to catch stray promises
-     * @param ctx Context describing where this promise is used, like "startVideo"
-     * @param promiseId temporarily unique identifier for this Promise, used to help finding out the order of events related
-     *                  to a singular Promise from the log output.
-     * @param callback The function to promisify
-     */
-    promisify(ctx, callback, promiseId) {
-        if (promiseId === undefined) {
-            promiseId = this.getPromiseId();
-        }
-        const logFormat = this.logCtx(promiseId, ctx);
-        let cancel;
-        return new Promise((resolve, reject) => {
-            logger.trace((`${logFormat}New Promise, timeout=${this.promiseSafetyTimeout}`));
-            cancel = window.setTimeout(() => {
-                const err = new PromiseTimeout_1.PromiseTimeoutException(`${logFormat}Timeouts`);
-                logger.error(err, err.stack);
-                reject(err);
-            }, this.promiseSafetyTimeout);
-            callback(resolve, reject);
-        })
-            .then((p) => {
-            window.clearTimeout(cancel);
-            logger.trace(`${logFormat}Resolved`);
-            return p;
-        });
     }
 }
 // https://developers.google.com/youtube/iframe_api_reference#Events

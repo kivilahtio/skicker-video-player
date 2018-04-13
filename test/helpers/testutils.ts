@@ -59,6 +59,14 @@ export const createPlayer = (url: string|URL, opts?: IVideoAPIOptions, elementId
     .toEqual(jasmine.any(VideoPlayer)); //videoPlayer is a VideoPlayer
     init(videoPlayer);
 
+    //VideoPlayer not yet injected into the given HTML element
+    const htmlElementsCreated: number =
+      $(vpElement)
+      .find("*")
+      .length;
+    expect(htmlElementsCreated)
+      .toEqual(0);
+
     return videoPlayer;
 
   } catch (err) {
@@ -111,6 +119,32 @@ export const start = (): Promise<VideoAPI> =>
   .then((vapi: VideoAPI) => {
     expect(vp.getStatus())
     .toBe(VideoPlayerStatus.playing);
+
+    return vapi;
+  })
+  .catch((err) => {
+    err = errorize(err);
+    logger.fatal(err, err.stack);
+    throw err;
+  });
+
+export const pause = (): Promise<VideoAPI> =>
+  vp.pauseVideo()
+  .then((vapi: VideoAPI) => {
+    expect(vp.getStatus()).toBe(VideoPlayerStatus.paused);
+
+    return vapi;
+  })
+  .catch((err) => {
+    err = errorize(err);
+    logger.fatal(err, err.stack);
+    throw err;
+  });
+
+export const stop = (): Promise<VideoAPI> =>
+  vp.stopVideo()
+  .then((vapi: VideoAPI) => {
+    expect(vp.getStatus()).toBe(VideoPlayerStatus.unstarted);
 
     return vapi;
   })

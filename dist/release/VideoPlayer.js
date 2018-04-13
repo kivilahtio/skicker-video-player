@@ -5,6 +5,8 @@ const YouTubeVideo_1 = require("./VideoAPI/YouTubeVideo");
 const BadParameter_1 = require("./Exception/BadParameter");
 const UnknownVideoSource_1 = require("./Exception/UnknownVideoSource");
 const skicker_logger_manager_1 = require("skicker-logger-manager");
+const PromiseTimeout_1 = require("./Exception/PromiseTimeout");
+const UnknownState_1 = require("./Exception/UnknownState");
 const logger = skicker_logger_manager_1.LoggerManager.getLogger("Skicker.VideoPlayer");
 /**
  * Front-end to interface with multiple video playing sources.
@@ -21,6 +23,14 @@ class VideoPlayer {
      * @param options
      */
     constructor(rootElement, options, url) {
+        /**
+         * How long does each Promise created in this class take to timeout?
+         * This is used to protect and catch against leaking promises that never resolve.
+         * Time unit in ms
+         */
+        this.promiseSafetyTimeout = process.env.NODE_ENV === "testing" ? 9500 : 20000;
+        /** Queue actions here, prevents for ex. multiple seeks from messing with each other */
+        this.actionQueue = new Array();
         this.options = {};
         this.youTubeURLParsingRegexp = /[&?]v=(\w+)(?:\?|$)/;
         logger.debug(`constructor():> params rootElement=${rootElement})`);
@@ -56,6 +66,12 @@ class VideoPlayer {
     /** Returns the options given */
     getOptions() {
         return this.options;
+    }
+    getPlaybackRate() {
+        if (this.videoAPI) {
+            return this.videoAPI.getPlaybackRate();
+        }
+        return 1;
     }
     /**
      * Returns -1 if videoAPI has not been loaded
@@ -120,7 +136,7 @@ class VideoPlayer {
         }
         if (this.videoAPI === undefined) {
             this.videoAPI = this.createVideoAPI();
-            return this.videoAPI.loadVideo(this.videoId, this.options);
+            return this.queueAction("loadVideo", this.videoAPI.loadVideo, this.videoId, this.options);
         }
         else {
             logger.debug(`loadVideo():> Video already loaded, not loading it again, for videoId=${this.videoId}, api=${this.api}`);
@@ -141,27 +157,46 @@ class VideoPlayer {
         return this.loadVideo(this.videoId, this.api, options);
     }
     pauseVideo() {
-        return this.videoAPI.pauseVideo();
+        if (this.videoAPI === undefined) {
+            return this.loadVideo()
+                .then(() => this.queueAction("pauseVideo", this.videoAPI.pauseVideo));
+        }
+        return this.queueAction("pauseVideo", this.videoAPI.pauseVideo);
     }
     playOrPauseVideo() {
-        return this.loadIfNotYetLoaded()
-            .then(() => this.videoAPI.playOrPauseVideo());
+        if (this.videoAPI === undefined) {
+            return this.loadVideo()
+                .then(() => this.queueAction("playOrPauseVideo", this.videoAPI.playOrPauseVideo));
+        }
+        return this.queueAction("playOrPauseVideo", this.videoAPI.playOrPauseVideo);
     }
     seekVideo(position) {
-        return this.loadIfNotYetLoaded()
-            .then(() => this.videoAPI.seekVideo(position));
+        if (this.videoAPI === undefined) {
+            return this.loadVideo()
+                .then(() => this.queueAction("seekVideo", this.videoAPI.seekVideo, position));
+        }
+        return this.queueAction("seekVideo", this.videoAPI.seekVideo, position);
     }
     setPlaybackRate(rate) {
-        return this.loadIfNotYetLoaded()
-            .then(() => this.videoAPI.setPlaybackRate(rate));
+        if (this.videoAPI === undefined) {
+            return this.loadVideo()
+                .then(() => this.queueAction("setPlaybackRate", this.videoAPI.setPlaybackRate, rate));
+        }
+        return this.queueAction("setPlaybackRate", this.videoAPI.setPlaybackRate, rate);
     }
     startVideo() {
-        return this.loadIfNotYetLoaded()
-            .then(() => this.videoAPI.startVideo());
+        if (this.videoAPI === undefined) {
+            return this.loadVideo()
+                .then(() => this.queueAction("startVideo", this.videoAPI.startVideo));
+        }
+        return this.queueAction("startVideo", this.videoAPI.startVideo);
     }
     stopVideo() {
-        logger.debug("stopVideo()");
-        return this.videoAPI.stopVideo();
+        if (this.videoAPI === undefined) {
+            return this.loadVideo()
+                .then(() => this.queueAction("stopVideo", this.videoAPI.stopVideo));
+        }
+        return this.queueAction("stopVideo", this.videoAPI.stopVideo);
     }
     createVideoAPI() {
         logger.debug("selectVideoAPI():> ");
@@ -217,6 +252,71 @@ class VideoPlayer {
         else {
             throw new UnknownVideoSource_1.UnknownVideoSourceException(`Couldn't identify a known video source from URL '${url.toString()}'`);
         }
+    }
+    logCtx(promiseId, ctx, message) {
+        let sb = "";
+        if (promiseId !== undefined) {
+            sb += `Promise:${promiseId}:`;
+        }
+        if (ctx !== undefined) {
+            sb += `${ctx}():> `;
+        }
+        if (message) {
+            sb += message;
+        }
+        return sb;
+    }
+    /** Get a random string intended to track down individual promises */
+    getPromiseId() {
+        return (Math.random() + 1).toString(36).substring(4); // A poor man's random string generator
+    }
+    queueAction(ctx, callback, ...callbackParams) {
+        const promiseId = this.getPromiseId();
+        const actionId = ctx + promiseId; //A bit of sugar-coating to make the actionQueue easier to track
+        const logFormat = this.logCtx(promiseId, ctx);
+        const timeouts = {
+            actionQueueInterval: undefined,
+            promiseTimeout: undefined,
+        };
+        const promiseResolvedHandler = (p) => {
+            window.clearTimeout(timeouts.promiseTimeout);
+            const index = this.actionQueue.findIndex((storedActionId) => storedActionId === actionId);
+            if (index !== 0) {
+                throw new UnknownState_1.UnknownStateException(this.logCtx(promiseId, ctx, "callback that was resolved was not the first action in the queue! index=" + index));
+            }
+            this.actionQueue.splice(index, 1); //Remove the action matching the current action, this should be the first action
+            if (p instanceof Error) {
+                logger.trace(`${logFormat}Rejected!`);
+                throw p;
+            }
+            logger.trace(`${logFormat}Resolved`);
+            return p;
+        };
+        // Queue the action
+        this.actionQueue.push(actionId);
+        return new Promise((resolve, reject) => {
+            logger.trace((`${logFormat}New Promise, timeout=${this.promiseSafetyTimeout}`));
+            timeouts.promiseTimeout = window.setTimeout(() => {
+                const err = new PromiseTimeout_1.PromiseTimeoutException(`${logFormat}Timeouts`);
+                logger.error(err, err.stack);
+                reject(err);
+            }, this.promiseSafetyTimeout);
+            //Create a interval to poll the actionQueue
+            if (this.actionQueue.length > 1) {
+                logger.trace(`${logFormat}Queueing in actionQueue.length=${this.actionQueue.length}`);
+                timeouts.actionQueueInterval = window.setInterval(() => {
+                    //Check every 50ms if this action is next in queue
+                    if (this.actionQueue[0] === actionId) {
+                        callback.call(this.videoAPI, promiseId, ...callbackParams).then(resolve, reject);
+                        window.clearInterval(timeouts.actionQueueInterval); // Kill itself from within.
+                    }
+                }, 50);
+            }
+            else {
+                callback.call(this.videoAPI, promiseId, ...callbackParams).then(resolve, reject);
+            }
+        })
+            .then(promiseResolvedHandler, promiseResolvedHandler);
     }
 }
 exports.VideoPlayer = VideoPlayer;

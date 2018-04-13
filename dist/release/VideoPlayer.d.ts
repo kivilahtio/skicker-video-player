@@ -8,6 +8,14 @@ import { IVideoAPIOptions, SupportedVideoAPIs, VideoAPI, VideoPlayerStatus } fro
  * videoPlayer.startVideo().then(() => {alert("success")}).catch((err) => {alert(err.toString())})
  */
 export declare class VideoPlayer {
+    /**
+     * How long does each Promise created in this class take to timeout?
+     * This is used to protect and catch against leaking promises that never resolve.
+     * Time unit in ms
+     */
+    promiseSafetyTimeout: number;
+    /** Queue actions here, prevents for ex. multiple seeks from messing with each other */
+    private actionQueue;
     private api;
     private options;
     private rootElement;
@@ -30,6 +38,7 @@ export declare class VideoPlayer {
     getDuration(): number;
     /** Returns the options given */
     getOptions(): IVideoAPIOptions;
+    getPlaybackRate(): number;
     /**
      * Returns -1 if videoAPI has not been loaded
      */
@@ -84,4 +93,8 @@ export declare class VideoPlayer {
      * @throws BadParameterException if the URL is missing some important parameter
      */
     private parseURL(url);
+    private logCtx(promiseId?, ctx?, message?);
+    /** Get a random string intended to track down individual promises */
+    private getPromiseId();
+    private queueAction<G>(ctx, callback, ...callbackParams);
 }

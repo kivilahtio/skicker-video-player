@@ -4,7 +4,6 @@ import { BadPlaybackRateException } from "../src/Exception/BadPlaybackRate";
 import { YouTubeVideo } from "../src/VideoAPI/YouTubeVideo";
 import { SupportedVideoAPIs, VideoPlayerStatus, VideoAPI } from "../src/VideoAPI";
 import { VideoPlayer } from "../src/VideoPlayer";
-import * as dom from "./helpers/dom";
 import * as tu from "./helpers/testutils";
 
 import { LoggerManager } from "skicker-logger-manager";
@@ -212,6 +211,8 @@ describe("Seek a video - Bug - Never resolving Promise when seeking+buffering a 
       return tu.start();
     });
   });
+
+
 
   it("Destroy", () => {
     logger.info("Destroy");
