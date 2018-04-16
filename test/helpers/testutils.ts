@@ -154,13 +154,16 @@ export const stop = (): Promise<VideoPlayer> =>
     throw err;
   });
 
-export const destroy = (): void => {
+export const destroy = (vipa?: VideoPlayer): void => {
+  if (vipa === undefined) {
+    vipa = vp;
+  }
   try {
-    const el = vp.getRootElement();
-    vp.destroy();
+    const el = vipa.getRootElement();
+    vipa.destroy();
 
     expect($("body").find(el)[0]).toBe(undefined);
-    expect((vp as any).videoAPI).toBe(undefined);
+    expect((vipa as any).videoAPI).toBe(undefined);
 
     vp = undefined;
 

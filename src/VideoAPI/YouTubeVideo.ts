@@ -379,16 +379,47 @@ export class YouTubeVideo extends VideoAPI {
    */
   private createPlayer(actionId: string, videoId: string): Promise<YouTubeVideo> {
     const ctx: string = "createPlayer";
+
+    //YT Player not created yet, and the global IFrame API code has not been loaded yet.
     if (! this.ytPlayer) {
+
+      //Create a reference to kill intervals from within closures that they run.
+      const timers = {
+        interval: 0,
+      };
+      //Promisify this
       return new Promise((resolve, reject) => {
         this.ytPlayerOptions = this.translateIVideoAPIOptionsToYTPlayerOptions(this.options);
         this.ytPlayerOptions.videoId = videoId;
 
-        this.injectDefaultHandlers(resolve, reject); // This promise is resolved from the injected default onReady()-callback
+        const _createPlayer = () => {
+          this.injectDefaultHandlers(resolve, reject); // This promise is resolved from the injected default onReady()-callback
 
-        logger.debug(this.logCtx(actionId, ctx,
-          `Creating a new player, videoId=${videoId}, elementId=${this.rootElement.id}, ytPlayerOptions=${this.ytPlayerOptions}`));
-        this.ytPlayer = new YT.Player(this.rootElement.id, this.ytPlayerOptions);
+          logger.debug(this.logCtx(actionId, ctx,
+            `Creating a new player, videoId=${videoId}, elementId=${this.rootElement.id}, ytPlayerOptions=${this.ytPlayerOptions}`));
+          this.ytPlayer = new YT.Player(this.rootElement.id, this.ytPlayerOptions);
+        };
+
+        //Another YouTube IFrame Player has begun the work of loading the source code from YouTube,
+        // now this Player instance must wait for the script to complete as well.
+        if (document.getElementById("youtube-iframe_api") && !(document.getElementById("youtube-iframe_api").hasAttribute("data-complete"))) {
+          //Keep polling every 100ms if the IFrame sources are loaded
+          timers.interval = window.setInterval(() => {
+            if (document.getElementById("youtube-iframe_api") && document.getElementById("youtube-iframe_api").hasAttribute("data-complete")) {
+              window.clearInterval(timers.interval); //Release the interval so it wont create new players ad infinitum
+              logger.debug(this.logCtx(actionId, ctx, `YouTube IFrame source code available to proceed loading videoId=${videoId}`));
+              _createPlayer();
+            }
+          },
+          100);
+          logger.debug(this.logCtx(actionId, ctx,
+            "Another VideoPlayer is loading the YouTube IFrame Player source code, waiting for the source code to become available to proceed loading videoId="+videoId)
+          );
+        }
+        //The IFrame source code has been loaded already
+        else {
+          _createPlayer();
+        }
       });
     } else {
       logger.debug(this.logCtx(actionId, ctx, `Player exists, Promise resolved for videoId=${videoId}`));
@@ -407,16 +438,18 @@ export class YouTubeVideo extends VideoAPI {
       logger.debug(this.logCtx(actionId, ctx));
       const tag: HTMLElement = document.createElement("script");
 
-      tag.setAttribute("src", "https://www.youtube.com/iframe_api");
-      tag.setAttribute("id", "youtube-iframe_api");
-      const firstScriptTag: HTMLElement = document.getElementsByTagName("script")[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
       return new Promise((resolve, reject) => {
+
+        //Create a SCRIPT-tag and make it load the javascript by pointing it to the URL
+        tag.setAttribute("src", "https://www.youtube.com/iframe_api");
+        tag.setAttribute("id", "youtube-iframe_api");
+        const firstScriptTag: HTMLElement = document.getElementsByTagName("script")[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         // YouTube IFrame API signals intialization is complete
         (window as any).onYouTubeIframeAPIReady = (): void => {
           logger.debug(this.logCtx(actionId, ctx, "onYouTubeIframeAPIReady():> IFrame API loaded, Promise resolved"));
+          tag.setAttribute("data-complete", "1"); //Mark the API loaded globally so other YouTubeVideo instances can proceed getting constructed.
           resolve(this);
         };
       });
