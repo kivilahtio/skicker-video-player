@@ -334,7 +334,7 @@ export class YouTubeVideo extends VideoAPI {
             //this.stateChangeHandlerFulfilled(VideoPlayerStatus.ended, actionId); //It is possible to seek to the end
             resolve(this);
           }
-        },100);
+        },500);
       }
 
       const func = (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {

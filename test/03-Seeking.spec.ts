@@ -159,6 +159,14 @@ describe("Seek a video - Bug - Never resolving Promise when seeking+buffering a 
       });
     });
 
+    it("Seek-action triggered", () => {
+      logger.info("Seek-action triggered again");
+      return tu.seek(55.500, 0.250)
+      .then((vapi: VideoAPI) => {
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.started);
+      });
+    });
+
     it("Seek to the end while playing", () => {
       expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.started);
       logger.info("Seek to the end while playing");

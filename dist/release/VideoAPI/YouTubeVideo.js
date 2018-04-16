@@ -261,7 +261,7 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
                         //this.stateChangeHandlerFulfilled(VideoPlayerStatus.ended, actionId); //It is possible to seek to the end
                         resolve(this);
                     }
-                }, 100);
+                }, 500);
             }
             const func = (ytv, event) => {
                 logger.debug(this.logCtx(actionId, ctx, `stateChangeHandlers.${this.getStatus()}():> Position seeked`));
