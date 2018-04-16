@@ -81,7 +81,7 @@ export const createPlayer = (url: string|URL, opts?: IVideoAPIOptions, elementId
  * @param pos seconds as a number, or a h:m:s || m:s notation as string
  * @param tolerance
  */
-export const seek = (pos: number | string, tolerance: number): Promise<VideoAPI> => {
+export const seek = (pos: number | string, tolerance: number): Promise<VideoPlayer> => {
   if (typeof(pos) === "string") { //This is a position like 1:05:22
     let seconds: number = 0;
     const hms: string[] = pos.split(":");
@@ -99,9 +99,9 @@ export const seek = (pos: number | string, tolerance: number): Promise<VideoAPI>
   }
   return vp
   .seekVideo(pos)
-  .then((vapi: VideoAPI) => {
+  .then((vapi: VideoPlayer) => {
 
-    const pos: number = vp.getVideoAPI().getPosition();
+    const pos: number = (vp as any).videoAPI.getPosition();
     expect(pos).toBeGreaterThanOrEqual(pos - tolerance, "Then video is seeked");
     expect(pos).toBeLessThanOrEqual(pos + tolerance, "Then video is seeked");
 
@@ -114,9 +114,9 @@ export const seek = (pos: number | string, tolerance: number): Promise<VideoAPI>
   });
 };
 
-export const start = (): Promise<VideoAPI> =>
+export const start = (): Promise<VideoPlayer> =>
   vp.startVideo()
-  .then((vapi: VideoAPI) => {
+  .then((vapi: VideoPlayer) => {
     expect(vp.getStatus())
     .toBe(VideoPlayerStatus.started, "Then Video is started");
 
@@ -128,9 +128,9 @@ export const start = (): Promise<VideoAPI> =>
     throw err;
   });
 
-export const pause = (): Promise<VideoAPI> =>
+export const pause = (): Promise<VideoPlayer> =>
   vp.pauseVideo()
-  .then((vapi: VideoAPI) => {
+  .then((vapi: VideoPlayer) => {
     expect(vp.getStatus()).toBe(VideoPlayerStatus.paused, "Then Video is paused");
 
     return vapi;
@@ -141,9 +141,9 @@ export const pause = (): Promise<VideoAPI> =>
     throw err;
   });
 
-export const stop = (): Promise<VideoAPI> =>
+export const stop = (): Promise<VideoPlayer> =>
   vp.stopVideo()
-  .then((vapi: VideoAPI) => {
+  .then((vapi: VideoPlayer) => {
     expect(vp.getStatus()).toBe(VideoPlayerStatus.stopped, "Then Video is 'stopped'");
 
     return vapi;
@@ -160,7 +160,7 @@ export const destroy = (): void => {
     vp.destroy();
 
     expect($("body").find(el)[0]).toBe(undefined);
-    expect(vp.getVideoAPI()).toBe(undefined);
+    expect((vp as any).videoAPI).toBe(undefined);
 
     vp = undefined;
 

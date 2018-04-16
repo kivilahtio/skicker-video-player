@@ -105,12 +105,6 @@ class VideoPlayer {
         return this.transition;
     }
     /**
-     * Returns the video API implementation
-     */
-    getVideoAPI() {
-        return this.videoAPI;
-    }
-    /**
      * Returns the ID of the video being played
      */
     getVideoId() {
@@ -141,13 +135,14 @@ class VideoPlayer {
             Promise.reject(new BadParameter_1.BadParameterException("video API is undefined. You must pass it here or in the constructor." +
                 "This is typically parsed from the base of the video url."));
         }
-        if (this.videoAPI === undefined) {
+        if (this.videoAPI === undefined && this.getStatus() !== VideoAPI_1.VideoPlayerStatus.cueing) {
             this.videoAPI = this.createVideoAPI();
             return this.queueAction("loadVideo", this.videoAPI.loadVideo, this.videoId, this.options);
         }
         else {
-            logger.debug(`loadVideo():> Video already loaded, not loading it again, for videoId=${this.videoId}, api=${this.api}`);
-            return Promise.resolve(this.videoAPI);
+            const loadedLoading = (this.getStatus() !== VideoAPI_1.VideoPlayerStatus.cueing) ? "being loading" : "loaded";
+            logger.debug(`loadVideo():> Video already ${loadedLoading}, not loading it again, for videoId=${this.videoId}, api=${this.api}`);
+            return Promise.resolve(this);
         }
     }
     /**
@@ -293,7 +288,7 @@ class VideoPlayer {
                 throw p;
             }
             logger.trace(`${logFormat}Resolved`);
-            return p;
+            return this;
         };
         // Queue the action
         this.actionQueue.push(actionId);

@@ -83,7 +83,7 @@ describe("VideoPlayer, ", () => {
       logger.info("load video");
       expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.notLoaded);
       return videoPlayer.loadVideo()
-      .then((vapi: VideoAPI) => {
+      .then((vapi: VideoPlayer) => {
         expect(vapi.getStatus()).toBe(VideoPlayerStatus.cued);
       });
     });
@@ -112,7 +112,7 @@ describe("VideoPlayer, ", () => {
       logger.info("Pause when Video is cued");
       expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cued, "Given the video is 'cued'");
       return videoPlayer.pauseVideo()
-      .then((vapi: VideoAPI) => {
+      .then((vapi: VideoPlayer) => {
         expect(vapi.getStatus()).toBe(VideoPlayerStatus.cued);
       });
     });
@@ -139,7 +139,7 @@ describe("VideoPlayer, ", () => {
       logger.info("Pause when Video is stopped");
       expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cued, "Given the video is 'cued'");
       return videoPlayer.pauseVideo()
-      .then((vapi: VideoAPI) => {
+      .then((vapi: VideoPlayer) => {
         expect(vapi.getStatus()).toBe(VideoPlayerStatus.cued, "Finally the video is 'cued'");
       });
     });

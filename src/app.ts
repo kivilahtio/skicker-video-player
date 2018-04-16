@@ -167,11 +167,11 @@ form.onsubmit = function(e) {
 
   /* 5. Prepare the video for display */
   videoPlayer.loadVideoFromURL(new URL(formData["videoUrl"]), transformFormDataToIVideoAPIOptions(formData))
-  .then((videoAPI: VideoAPI) => {
+  .then((vipa: VideoPlayer) => {
     const seeker: JQuery<HTMLElement> = $(controller).find(".video-control-seek input");
     const max: number = Number.parseInt(seeker.attr("max"));
     if (max === 0) {
-      seeker.attr("max", videoAPI.getDuration());
+      seeker.attr("max", vipa.getDuration());
     }
   })
   .catch((err: Error) => {

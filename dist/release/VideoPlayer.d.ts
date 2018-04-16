@@ -1,4 +1,4 @@
-import { IVideoAPIOptions, SupportedVideoAPIs, VideoAPI, VideoPlayerStatus } from "./VideoAPI";
+import { IVideoAPIOptions, SupportedVideoAPIs, VideoPlayerStatus } from "./VideoAPI";
 /**
  * Front-end to interface with multiple video playing sources.
  * Most actions return a Promise. This way it is very easy to handle exceptions and take action when the Promise
@@ -56,10 +56,6 @@ export declare class VideoPlayer {
     getStatus(): VideoPlayerStatus;
     getTransition(): VideoPlayerStatus;
     /**
-     * Returns the video API implementation
-     */
-    getVideoAPI(): VideoAPI;
-    /**
      * Returns the ID of the video being played
      */
     getVideoId(): string;
@@ -69,7 +65,7 @@ export declare class VideoPlayer {
      * @param api A supported video source API name. You can try casting a dynamic variable using "let api: SupportedVideoAPIs = SupportedVideoAPIs['YouTube'];"
      * @param options Options to pass to the video player implementation
      */
-    loadVideo(id?: string, api?: SupportedVideoAPIs, options?: IVideoAPIOptions): Promise<VideoAPI>;
+    loadVideo(id?: string, api?: SupportedVideoAPIs, options?: IVideoAPIOptions): Promise<VideoPlayer>;
     /**
      * Prepares a video for playing. The video source and id is parsed from the URL.
      *
@@ -78,13 +74,13 @@ export declare class VideoPlayer {
      * @throws UnknownVideoSourceException if the video source is not supported
      * @throws BadParameterException if the URL is missing some important parameter
      */
-    loadVideoFromURL(url: URL, options?: IVideoAPIOptions): Promise<VideoAPI>;
-    pauseVideo(): Promise<VideoAPI>;
-    playOrPauseVideo(): Promise<VideoAPI>;
-    seekVideo(position: number): Promise<VideoAPI>;
-    setPlaybackRate(rate: number): Promise<VideoAPI>;
-    startVideo(): Promise<VideoAPI>;
-    stopVideo(): Promise<VideoAPI>;
+    loadVideoFromURL(url: URL, options?: IVideoAPIOptions): Promise<VideoPlayer>;
+    pauseVideo(): Promise<VideoPlayer>;
+    playOrPauseVideo(): Promise<VideoPlayer>;
+    seekVideo(position: number): Promise<VideoPlayer>;
+    setPlaybackRate(rate: number): Promise<VideoPlayer>;
+    startVideo(): Promise<VideoPlayer>;
+    stopVideo(): Promise<VideoPlayer>;
     private createVideoAPI();
     /**
      * given the URL of the video, decides which VideoAPI to use and extracts other available information

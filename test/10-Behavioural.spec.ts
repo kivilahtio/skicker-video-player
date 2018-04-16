@@ -38,10 +38,16 @@ describe("Play a video from YouTube using a headless player,", () => {
       promises.push(videoPlayer
       .loadVideo()
       .then(() => {
-        expect(videoPlayer.getStatus())
-        .toBe(VideoPlayerStatus.cued);
+        expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cued);
         expect(actionQueue.length).toBe(2, "Video loaded and actionQueue should be 2");
       }));
+      // Load Video twice in a row. If YouTube Player gets these requests, it will fail miserably. Protect the Core!
+      promises.push(videoPlayer
+        .loadVideo()
+        .then(() => {
+          expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cueing); //We have a previous action loadVideo():ing, so we get a transitional status.
+          expect(actionQueue.length).toBe(3, "Video re-load rejected. ActionQueue should be 3 since no action has completed yet.");
+        }));
       // Loading a video, and starting it immediately afterwards causes issues with the VideoAPI being instantiated,
       // but the internal Player throwing exceptions.
       promises.push(tu.start()
@@ -73,7 +79,7 @@ describe("Play a video from YouTube using a headless player,", () => {
         expect(actionQueue.length).toBe(4, "Video paused and actionQueue is 4");
       }));
       promises.push(tu.seek(8.000, 0.250)
-      .then((vapi: VideoAPI) => {
+      .then((vapi: VideoPlayer) => {
         expect(vapi.getStatus()).toBe(VideoPlayerStatus.paused);
         expect(actionQueue.length).toBe(3, "Video seeked and actionQueue is 3");
       }));
@@ -83,7 +89,7 @@ describe("Play a video from YouTube using a headless player,", () => {
         // Queue a pause-action at the end of the current queue!
         // When this resolves, the queue is empty
         promises.push(videoPlayer.pauseVideo()
-        .then((vapi: VideoAPI) => {
+        .then((vapi: VideoPlayer) => {
           expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cued, "Then Video is cued, because it was cued before pausing");
 
           return vapi;
@@ -93,7 +99,7 @@ describe("Play a video from YouTube using a headless player,", () => {
         }));
       }));
       promises.push(tu.seek(16.000, 0.250)
-      .then((vapi: VideoAPI) => {
+      .then((vapi: VideoPlayer) => {
         expect(vapi.getStatus()).toBe(VideoPlayerStatus.started);
         expect(actionQueue.length).toBe(2, "Video seeked again and actionQueue is 2"); //Should be 1, but a pause-action was triggered midway
       }));
@@ -130,7 +136,7 @@ describe("Play a video from YouTube using a headless player,", () => {
     it("Setting an accepted playback rate", () =>
       videoPlayer.setPlaybackRate(0.5)
       .then(() => {
-        expect(videoPlayer.getVideoAPI().getPlaybackRate())
+        expect(videoPlayer.getPlaybackRate())
         .toEqual(0.5);
       }),
     );
@@ -138,7 +144,7 @@ describe("Play a video from YouTube using a headless player,", () => {
     it("Setting the same rate accidentally again", () => // YouTube Player doesn't trigger the onPlaybackRateChange() callback in this case!
       videoPlayer.setPlaybackRate(0.5)
       .then(() => {
-        expect(videoPlayer.getVideoAPI().getPlaybackRate())
+        expect(videoPlayer.getPlaybackRate())
         .toEqual(0.5);
       }),
     );

@@ -136,13 +136,6 @@ export class VideoPlayer {
   }
 
   /**
-   * Returns the video API implementation
-   */
-  public getVideoAPI(): VideoAPI {
-    return this.videoAPI;
-  }
-
-  /**
    * Returns the ID of the video being played
    */
   public getVideoId(): string {
@@ -157,7 +150,7 @@ export class VideoPlayer {
    * @param api A supported video source API name. You can try casting a dynamic variable using "let api: SupportedVideoAPIs = SupportedVideoAPIs['YouTube'];"
    * @param options Options to pass to the video player implementation
    */
-  public loadVideo(id?: string, api?: SupportedVideoAPIs, options?: IVideoAPIOptions): Promise<VideoAPI> {
+  public loadVideo(id?: string, api?: SupportedVideoAPIs, options?: IVideoAPIOptions): Promise<VideoPlayer> {
     logger.debug(`loadVideo():> params videoId=${id}, api=${api}, options=${options || {}}`);
 
     if (options) {
@@ -177,14 +170,15 @@ export class VideoPlayer {
                                                "This is typically parsed from the base of the video url."));
     }
 
-    if (this.videoAPI === undefined) {
+    if (this.videoAPI === undefined && this.getStatus() !== VideoPlayerStatus.cueing) {
       this.videoAPI = this.createVideoAPI();
 
       return this.queueAction("loadVideo", this.videoAPI.loadVideo, this.videoId, this.options);
     } else {
-      logger.debug(`loadVideo():> Video already loaded, not loading it again, for videoId=${this.videoId}, api=${this.api}`);
+      const loadedLoading = (this.getStatus() !== VideoPlayerStatus.cueing) ? "being loading" : "loaded";
+      logger.debug(`loadVideo():> Video already ${loadedLoading}, not loading it again, for videoId=${this.videoId}, api=${this.api}`);
 
-      return Promise.resolve(this.videoAPI);
+      return Promise.resolve(this);
     }
   }
 
@@ -196,7 +190,7 @@ export class VideoPlayer {
    * @throws UnknownVideoSourceException if the video source is not supported
    * @throws BadParameterException if the URL is missing some important parameter
    */
-  public loadVideoFromURL(url: URL, options?: IVideoAPIOptions): Promise<VideoAPI> {
+  public loadVideoFromURL(url: URL, options?: IVideoAPIOptions): Promise<VideoPlayer> {
     logger.debug(`loadVideoFromURL():> params url=${url}, options=${options || {}}`);
 
     this.parseURL(url); // Parses the url and stores the videoId and api type to this object.
@@ -204,7 +198,7 @@ export class VideoPlayer {
     return this.loadVideo(this.videoId, this.api, options);
   }
 
-  public pauseVideo(): Promise<VideoAPI> {
+  public pauseVideo(): Promise<VideoPlayer> {
     if (this.videoAPI === undefined) {
       this.loadVideo();
     }
@@ -212,7 +206,7 @@ export class VideoPlayer {
     return this.queueAction("pauseVideo", this.videoAPI.pauseVideo);
   }
 
-  public playOrPauseVideo(): Promise<VideoAPI> {
+  public playOrPauseVideo(): Promise<VideoPlayer> {
     if (this.getStatus() === VideoPlayerStatus.started || this.transition === VideoPlayerStatus.starting) {
       return this.pauseVideo();
     } else {
@@ -220,7 +214,7 @@ export class VideoPlayer {
     }
   }
 
-  public seekVideo(position: number): Promise<VideoAPI> {
+  public seekVideo(position: number): Promise<VideoPlayer> {
     if (this.videoAPI === undefined) {
       this.loadVideo();
     }
@@ -228,7 +222,7 @@ export class VideoPlayer {
     return this.queueAction("seekVideo", this.videoAPI.seekVideo, position);
   }
 
-  public setPlaybackRate(rate: number): Promise<VideoAPI> {
+  public setPlaybackRate(rate: number): Promise<VideoPlayer> {
     if (this.videoAPI === undefined) {
       this.loadVideo();
     }
@@ -236,7 +230,7 @@ export class VideoPlayer {
     return this.queueAction("setPlaybackRate", this.videoAPI.setPlaybackRate, rate)
   }
 
-  public startVideo(): Promise<VideoAPI> {
+  public startVideo(): Promise<VideoPlayer> {
     if (this.videoAPI === undefined) {
       this.loadVideo(); //Queue load action
     }
@@ -244,7 +238,7 @@ export class VideoPlayer {
     return this.queueAction("startVideo", this.videoAPI.startVideo);
   }
 
-  public stopVideo(): Promise<VideoAPI> {
+  public stopVideo(): Promise<VideoPlayer> {
     if (this.videoAPI === undefined) {
       this.loadVideo();
     }
@@ -335,7 +329,7 @@ export class VideoPlayer {
   private getPromiseId(): string {
     return (Math.random() + 1).toString(36).substring(4); // A poor man's random string generator
   }
-  private queueAction<G>(funcName: string, callback: (...any: any[]) => Promise<G>, ...callbackParams: any[]): Promise<G> {
+  private queueAction<G>(funcName: string, callback: (...any: any[]) => Promise<any>, ...callbackParams: any[]): Promise<VideoPlayer> {
 
     const promiseId = this.getPromiseId();
     const actionId = `${funcName}:${promiseId}`; //A bit of sugar-coating to make the actionQueue easier to track
@@ -347,7 +341,7 @@ export class VideoPlayer {
       promiseTimeout: undefined,
     };
 
-    const promiseResolvedHandler = (p: G) => {
+    const promiseResolvedHandler = (p: any) => {
       this.transition = undefined; // No longer transitioning anywhere
       window.clearTimeout(timeouts.promiseTimeout);
 
@@ -363,12 +357,12 @@ export class VideoPlayer {
       }
       logger.trace(`${logFormat}Resolved`);
 
-      return p;
+      return this;
     };
 
     // Queue the action
     this.actionQueue.push(actionId);
-    return new Promise<G>((resolve, reject) => {
+    return new Promise<VideoPlayer>((resolve, reject) => {
       logger.trace((`${logFormat}New Promise, timeout=${this.promiseSafetyTimeout}`));
       timeouts.promiseTimeout = window.setTimeout(() => {
         const err: Error = new PromiseTimeoutException(`${logFormat}Timeouts`);

@@ -124,14 +124,14 @@ describe("Seek a video - Bug - Never resolving Promise when seeking+buffering a 
     it("Seek when Video has not been loaded, Seek-action triggered", () => {
       logger.info("Seek-action triggered");
       return tu.seek(16.500, 0.250)
-      .then((vapi: VideoAPI) => {
+      .then((vapi: VideoPlayer) => {
         expect(vapi.getStatus()).toBe(VideoPlayerStatus.paused);
       });
     });
     it("Seek when Video has not been loaded, Seek-action triggered again to test onStateChangeHandlers for same-state transition", () => {
       logger.info("Seek-action triggered again to test onStateChangeHandlers for same-state transition");
       return tu.seek(25.500, 0.250)
-      .then((vapi: VideoAPI) => {
+      .then((vapi: VideoPlayer) => {
         expect(vapi.getStatus()).toBe(VideoPlayerStatus.paused);
       });
     });
@@ -146,7 +146,7 @@ describe("Seek a video - Bug - Never resolving Promise when seeking+buffering a 
     it("Seek-action triggered", () => {
       logger.info("Seek-action triggered");
       return tu.seek(45.500, 0.250)
-      .then((vapi: VideoAPI) => {
+      .then((vapi: VideoPlayer) => {
         expect(vapi.getStatus()).toBe(VideoPlayerStatus.started);
       });
     });
@@ -154,7 +154,7 @@ describe("Seek a video - Bug - Never resolving Promise when seeking+buffering a 
     it("Seek-action triggered again to test onStateChangeHandlers for same-state transition", () => {
       logger.info("Seek-action triggered again to test onStateChangeHandlers for same-state transition");
       return tu.seek(46.500, 0.250)
-      .then((vapi: VideoAPI) => {
+      .then((vapi: VideoPlayer) => {
         expect(vapi.getStatus()).toBe(VideoPlayerStatus.started);
       });
     });
@@ -162,7 +162,7 @@ describe("Seek a video - Bug - Never resolving Promise when seeking+buffering a 
     it("Seek-action triggered", () => {
       logger.info("Seek-action triggered again");
       return tu.seek(55.500, 0.250)
-      .then((vapi: VideoAPI) => {
+      .then((vapi: VideoPlayer) => {
         expect(vapi.getStatus()).toBe(VideoPlayerStatus.started);
       });
     });
