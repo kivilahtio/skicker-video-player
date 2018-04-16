@@ -6,17 +6,46 @@ export enum SupportedVideoAPIs { //Using string-based enums, for easier debuggin
 }
 
 /*
- * Currently only VideoAPI.YouTubePlayer uses this mapping table. If other backends are added, generalize mappings.
+ * Statuses the VideoPlayer can be in.
+ *
+ * stopping/ending/... transitions denote a Promise being resolved. When the corresponding Promise is resolved, status is transitioned to stopped/ended/...
+ *
+ * YouTube Player updates the status to match the action when the action has been resolved,
+ *     eg. started-status only after the start()-action is resolved
+ * Need to know also when a transition is happening, to allow timing actions more closely from asynchronous user actions.
  */
 export enum VideoPlayerStatus {
   /** VideoPlayer has been initialized, but the VideoAPI has not been loaded or the VideoAPI is not available */
   notLoaded = "not loaded",
-  unstarted = "unstarted",
+  /** Video is seeking to a new position, this is a transition and the status where this ends is typically started or paused */
+  seeking =   "seeking",
+  /** Play has been stopped. When Video is loaded it becomes cued first, stop only after start. */
+  stopped =   "stopped",
+  /** Video is becoming stopped */
+  stopping =  "stopping",
+  /** Video has reached it's end */
   ended =     "ended",
-  playing =   "playing",
+  /** Video has reached it's end */
+  ending =    "ending",
+  /** Video play has been started or resumed */
+  started =   "started",
+  /** Start action in progress, becomes started when the play actually starts/resumes */
+  starting =  "starting",
+  /** Video was started and now is paused. */
   paused =    "paused",
+  /** Video is becoming paused */
+  pausing =   "pausing",
+  /** Video is being buffered, this is actually a status not a transition! */
   buffering = "buffering",
-  videoCued = "video cued",
+  /** Video has been initially loaded, eg. the thumbnail image is cued and initial seconds buffered. */
+  cued =      "cued",
+  /** Video is being cued. */
+  cueing =    "cueing",
+}
+
+export enum both {
+  VideoPlayerStatus,
+  VideoPlayerTransition,
 }
 
 export interface IVideoAPIOptions {
@@ -58,7 +87,6 @@ export abstract class VideoAPI {
   public abstract getVolume(): number | undefined;
   public abstract loadVideo(actionId: string, videoId: string, options?: IVideoAPIOptions): Promise<VideoAPI>;
   public abstract pauseVideo(actionId: string): Promise<VideoAPI>;
-  public abstract playOrPauseVideo(actionId: string): Promise<VideoAPI>;
   /**
    * @param position time in seconds where to seek to? Use decimals to reach millisecond precision.
    */

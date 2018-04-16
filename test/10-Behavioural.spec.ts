@@ -1,5 +1,3 @@
-"use strict";
-
 import * as $ from "jquery";
 
 import { BadPlaybackRateException } from "../src/Exception/BadPlaybackRate";
@@ -41,7 +39,7 @@ describe("Play a video from YouTube using a headless player,", () => {
       .loadVideo()
       .then(() => {
         expect(videoPlayer.getStatus())
-        .toBe(VideoPlayerStatus.videoCued);
+        .toBe(VideoPlayerStatus.cued);
         expect(actionQueue.length).toBe(2, "Video loaded and actionQueue should be 2");
       }));
       // Loading a video, and starting it immediately afterwards causes issues with the VideoAPI being instantiated,
@@ -84,14 +82,19 @@ describe("Play a video from YouTube using a headless player,", () => {
         expect(actionQueue.length).toBe(2, "Video started and actionQueue is 2");
         // Queue a pause-action at the end of the current queue!
         // When this resolves, the queue is empty
-        promises.push(tu.pause()
+        promises.push(videoPlayer.pauseVideo()
+        .then((vapi: VideoAPI) => {
+          expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cued, "Then Video is cued, because it was cued before pausing");
+
+          return vapi;
+        })
         .then(() => {
           expect(actionQueue.length).toBe(0);
         }));
       }));
       promises.push(tu.seek(16.000, 0.250)
       .then((vapi: VideoAPI) => {
-        expect(vapi.getStatus()).toBe(VideoPlayerStatus.playing);
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.started);
         expect(actionQueue.length).toBe(2, "Video seeked again and actionQueue is 2"); //Should be 1, but a pause-action was triggered midway
       }));
       promises.push(tu.stop()
@@ -103,7 +106,9 @@ describe("Play a video from YouTube using a headless player,", () => {
       expect(actionQueue.length).toBe(6, "6 actions queued and waiting to resolve."); //No including the pause-action triggered midway
 
       return Promise.all(promises)
-      .then(() => { logger.info("Queue a ton ended"); });
+      .then(() => Promise.all(promises) //We need to catch those promises again, because we have promises created during resolving of the first batch
+        .then(() => logger.info("Queue a ton ended"))
+      );
     });
   });
 

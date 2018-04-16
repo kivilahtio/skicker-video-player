@@ -102,8 +102,8 @@ export const seek = (pos: number | string, tolerance: number): Promise<VideoAPI>
   .then((vapi: VideoAPI) => {
 
     const pos: number = vp.getVideoAPI().getPosition();
-    expect(pos).toBeGreaterThanOrEqual(pos - tolerance);
-    expect(pos).toBeLessThanOrEqual(pos + tolerance);
+    expect(pos).toBeGreaterThanOrEqual(pos - tolerance, "Then video is seeked");
+    expect(pos).toBeLessThanOrEqual(pos + tolerance, "Then video is seeked");
 
     return vapi;
   })
@@ -118,7 +118,7 @@ export const start = (): Promise<VideoAPI> =>
   vp.startVideo()
   .then((vapi: VideoAPI) => {
     expect(vp.getStatus())
-    .toBe(VideoPlayerStatus.playing);
+    .toBe(VideoPlayerStatus.started, "Then Video is started");
 
     return vapi;
   })
@@ -131,7 +131,7 @@ export const start = (): Promise<VideoAPI> =>
 export const pause = (): Promise<VideoAPI> =>
   vp.pauseVideo()
   .then((vapi: VideoAPI) => {
-    expect(vp.getStatus()).toBe(VideoPlayerStatus.paused);
+    expect(vp.getStatus()).toBe(VideoPlayerStatus.paused, "Then Video is paused");
 
     return vapi;
   })
@@ -144,7 +144,7 @@ export const pause = (): Promise<VideoAPI> =>
 export const stop = (): Promise<VideoAPI> =>
   vp.stopVideo()
   .then((vapi: VideoAPI) => {
-    expect(vp.getStatus()).toBe(VideoPlayerStatus.unstarted);
+    expect(vp.getStatus()).toBe(VideoPlayerStatus.stopped, "Then Video is 'stopped'");
 
     return vapi;
   })

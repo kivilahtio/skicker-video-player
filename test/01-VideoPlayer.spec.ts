@@ -81,9 +81,10 @@ describe("VideoPlayer, ", () => {
 
     it("load video", () => {
       logger.info("load video");
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.notLoaded);
       return videoPlayer.loadVideo()
       .then((vapi: VideoAPI) => {
-        expect(vapi.getStatus()).toBe(VideoPlayerStatus.videoCued);
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.cued);
       });
     });
 
@@ -102,44 +103,44 @@ describe("VideoPlayer, ", () => {
       expect(videoPlayer.getPosition()).toBe(0);
     });
     it("getStatus() when video is loaded", () => {
-      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.videoCued);
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cued);
     });
   });
 
   describe("VideoPlayer pausing, ", () => {
     it("Pause when Video is cued, this causes nothing to happen", () => {
       logger.info("Pause when Video is cued");
-      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.videoCued);
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cued, "Given the video is 'cued'");
       return videoPlayer.pauseVideo()
       .then((vapi: VideoAPI) => {
-        expect(vapi.getStatus()).toBe(VideoPlayerStatus.videoCued);
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.cued);
       });
     });
 
     it("Stop when Video is cued", () => {
       logger.info("Stop when Video is cued");
-      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.videoCued);
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cued, "Given the video is 'cued'");
       return tu.stop();
     });
 
     it("Start when Video is cued", () => {
       logger.info("Start when Video is cued");
-      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.videoCued);
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cued, "Given the video is 'cued'");
       return tu.start();
     });
 
     it("Stop when Video is playing", () => {
       logger.info("Stop when Video is playing");
-      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.playing);
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.started, "Given the video is 'started'");
       return tu.stop();
     });
 
     it("Pause when Video is stopped, this causes nothing to happen", () => {
       logger.info("Pause when Video is stopped");
-      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.unstarted);
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cued, "Given the video is 'cued'");
       return videoPlayer.pauseVideo()
       .then((vapi: VideoAPI) => {
-        expect(vapi.getStatus()).toBe(VideoPlayerStatus.unstarted);
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.cued, "Finally the video is 'cued'");
       });
     });
   });

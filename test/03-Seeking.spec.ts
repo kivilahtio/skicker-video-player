@@ -28,35 +28,23 @@ describe("Seek a video", () => {
     .loadVideo()
     .then(() => {
       expect(videoPlayer.getStatus())
-      .toBe(VideoPlayerStatus.videoCued);
+      .toBe(VideoPlayerStatus.cued);
     });
   });
 
   describe("Seek when VideoPlayer is freshly loaded,", () => {
     it("Seek-action triggered", () => {
       logger.info("Seek-action triggered");
-      return videoPlayer
-      .seekVideo(10.500)
+      return tu.seek(10.500, 0.250)
       .then(() => {
-        expect(videoPlayer.getStatus())
-        .toBe("paused");
-
-        const pos: number = videoPlayer.getVideoAPI().getPosition();
-        expect(pos).toBeGreaterThanOrEqual(10.500);
-        expect(pos).toBeLessThanOrEqual(11.000);
+        expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.paused);
       });
     });
     it("Seek-action triggered again to test onStateChangeHandlers for same-state transition", () => {
       logger.info("Seek-action triggered again to test onStateChangeHandlers for same-state transition");
-      return videoPlayer
-      .seekVideo(11.500)
+      return tu.seek(11.500, 0.250)
       .then(() => {
-        expect(videoPlayer.getStatus())
-        .toBe("paused");
-
-        const pos: number = videoPlayer.getVideoAPI().getPosition();
-        expect(pos).toBeGreaterThanOrEqual(11.500);
-        expect(pos).toBeLessThanOrEqual(12.000);
+        expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.paused);
       });
     });
   });
@@ -66,36 +54,23 @@ describe("Seek a video", () => {
       logger.info("Start-action triggered");
       return videoPlayer.startVideo()
       .then(() => {
-        expect(videoPlayer.getStatus())
-        .toBe("playing");
+        expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.started);
       });
     });
 
     it("Seek-action triggered", () => {
       logger.info("Seek-action triggered");
-      return videoPlayer
-      .seekVideo(13.2500)
+      return tu.seek(13.2500, 0.250)
       .then(() => {
-        expect(videoPlayer.getStatus())
-        .toBe("playing");
-
-        const pos: number = videoPlayer.getVideoAPI().getPosition();
-        expect(pos).toBeGreaterThanOrEqual(13.250);
-        expect(pos).toBeLessThanOrEqual(13.750);
+        expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.started);
       });
     });
 
     it("Seek-action triggered again to test onStateChangeHandlers for same-state transition", () => {
       logger.info("Seek-action triggered again to test onStateChangeHandlers for same-state transition");
-      return videoPlayer
-      .seekVideo(14.2500)
+      return tu.seek(14.2500, 0.250)
       .then(() => {
-        expect(videoPlayer.getStatus())
-        .toBe("playing");
-
-        const pos: number = videoPlayer.getVideoAPI().getPosition();
-        expect(pos).toBeGreaterThanOrEqual(14.250);
-        expect(pos).toBeLessThanOrEqual(14.750);
+        expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.started);
       });
     });
   });
@@ -106,36 +81,24 @@ describe("Seek a video", () => {
       return videoPlayer
       .stopVideo()
       .then(() => {
-        expect(videoPlayer.getStatus())
-        .toBe("unstarted");
+        expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.stopped);
       });
     });
 
     it("Seek-action triggered", () => {
       logger.info("Seek-action triggered");
-      return videoPlayer
-      .seekVideo(1.666)
+      return tu.seek(1.666, 0.250)
       .then(() => {
-        expect(videoPlayer.getStatus())
-        .toBe("paused");
-
-        const pos: number = videoPlayer.getVideoAPI().getPosition();
-        expect(pos).toBeGreaterThanOrEqual(1.666);
-        expect(pos).toBeLessThanOrEqual(2.166);
+        expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.paused);
       });
     });
 
     it("Seek-action triggered again to test onStateChangeHandlers for same-state transition", () => {
       logger.info("Seek-action triggered again to test onStateChangeHandlers for same-state transition");
-      return videoPlayer
-      .seekVideo(2.555)
+      return tu.seek(2.555, 0.250)
       .then(() => {
         expect(videoPlayer.getStatus())
-        .toBe("paused");
-
-        const pos: number = videoPlayer.getVideoAPI().getPosition();
-        expect(pos).toBeGreaterThanOrEqual(2.555);
-        expect(pos).toBeLessThanOrEqual(2.655);
+        .toBe(VideoPlayerStatus.paused);
       });
     });
   });
@@ -184,7 +147,7 @@ describe("Seek a video - Bug - Never resolving Promise when seeking+buffering a 
       logger.info("Seek-action triggered");
       return tu.seek(45.500, 0.250)
       .then((vapi: VideoAPI) => {
-        expect(vapi.getStatus()).toBe(VideoPlayerStatus.playing);
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.started);
       });
     });
 
@@ -192,12 +155,12 @@ describe("Seek a video - Bug - Never resolving Promise when seeking+buffering a 
       logger.info("Seek-action triggered again to test onStateChangeHandlers for same-state transition");
       return tu.seek(46.500, 0.250)
       .then((vapi: VideoAPI) => {
-        expect(vapi.getStatus()).toBe(VideoPlayerStatus.playing);
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.started);
       });
     });
 
     it("Seek to the end while playing", () => {
-      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.playing);
+      expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.started);
       logger.info("Seek to the end while playing");
       return tu.seek("1:05:22", 0.250)
       .then(() => {

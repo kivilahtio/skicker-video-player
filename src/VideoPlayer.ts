@@ -21,6 +21,16 @@ const logger: log4javascript.Logger = LoggerManager.getLogger("Skicker.VideoPlay
  */
 export class VideoPlayer {
 
+  /** Given actions always trigger then matching transition statuses temporarily, until the Action has been resolved */
+  private static actionToTransitionMap: {[key: string]: VideoPlayerStatus} = {
+    loadVideo: VideoPlayerStatus.cueing,
+    pauseVideo: VideoPlayerStatus.pausing,
+    seekVideo: VideoPlayerStatus.seeking,
+    setPlaybackRate: undefined,
+    startVideo: VideoPlayerStatus.starting,
+    stopVideo: VideoPlayerStatus.stopping,
+  };
+
   /**
    * How long does each Promise created in this class take to timeout?
    * This is used to protect and catch against leaking promises that never resolve.
@@ -33,6 +43,7 @@ export class VideoPlayer {
   private api: SupportedVideoAPIs;
   private options: IVideoAPIOptions = {};
   private rootElement: HTMLElement;
+  private transition: VideoPlayerStatus | undefined = undefined;
   private videoAPI: VideoAPI;
   private videoId: string;
   private youTubeURLParsingRegexp: RegExp = /[&?]v=(\w+)(?:\?|$)/;
@@ -106,13 +117,22 @@ export class VideoPlayer {
   }
 
   /**
-   * Gets the status of the current video player implementation
+   * Gets the status of the current video player implementation or the current transition.
+   * Remeber to check for both the status and the transition,
+   * eg. started || starting
    */
   public getStatus(): VideoPlayerStatus {
+    if (this.transition !== undefined) {
+      return this.transition;
+    }
     if (this.videoAPI) {
       return this.videoAPI.getStatus();
     }
     return VideoPlayerStatus.notLoaded;
+  }
+
+  public getTransition(): VideoPlayerStatus {
+    return this.transition;
   }
 
   /**
@@ -186,26 +206,23 @@ export class VideoPlayer {
 
   public pauseVideo(): Promise<VideoAPI> {
     if (this.videoAPI === undefined) {
-      this.loadVideo(); //Queue a load action
-      return this.queueAction("pauseVideo", this.videoAPI.pauseVideo);
+      this.loadVideo();
     }
 
     return this.queueAction("pauseVideo", this.videoAPI.pauseVideo);
   }
 
   public playOrPauseVideo(): Promise<VideoAPI> {
-    if (this.videoAPI === undefined) {
-      this.loadVideo();
-      return this.queueAction("playOrPauseVideo", this.videoAPI.playOrPauseVideo);
+    if (this.getStatus() === VideoPlayerStatus.started || this.transition === VideoPlayerStatus.starting) {
+      return this.pauseVideo();
+    } else {
+      return this.startVideo();
     }
-
-    return this.queueAction("playOrPauseVideo", this.videoAPI.playOrPauseVideo);
   }
 
   public seekVideo(position: number): Promise<VideoAPI> {
     if (this.videoAPI === undefined) {
       this.loadVideo();
-      return this.queueAction("seekVideo", this.videoAPI.seekVideo, position);
     }
 
     return this.queueAction("seekVideo", this.videoAPI.seekVideo, position);
@@ -214,7 +231,6 @@ export class VideoPlayer {
   public setPlaybackRate(rate: number): Promise<VideoAPI> {
     if (this.videoAPI === undefined) {
       this.loadVideo();
-      return this.queueAction("setPlaybackRate", this.videoAPI.setPlaybackRate, rate);
     }
 
     return this.queueAction("setPlaybackRate", this.videoAPI.setPlaybackRate, rate)
@@ -222,8 +238,7 @@ export class VideoPlayer {
 
   public startVideo(): Promise<VideoAPI> {
     if (this.videoAPI === undefined) {
-      this.loadVideo();
-      return this.queueAction("startVideo", this.videoAPI.startVideo);
+      this.loadVideo(); //Queue load action
     }
 
     return this.queueAction("startVideo", this.videoAPI.startVideo);
@@ -232,7 +247,6 @@ export class VideoPlayer {
   public stopVideo(): Promise<VideoAPI> {
     if (this.videoAPI === undefined) {
       this.loadVideo();
-      return this.queueAction("stopVideo", this.videoAPI.stopVideo);
     }
 
     return this.queueAction("stopVideo", this.videoAPI.stopVideo);
@@ -251,17 +265,6 @@ export class VideoPlayer {
     } else {
       throw new UnknownVideoSourceException(`Video source '${this.api}' is not supported`);
     }
-  }
-
-  /**
-   * Loads the VideoPlayer instance for the known URL if missing
-   */
-  private loadIfNotYetLoaded(): Promise<VideoAPI> {
-    if (this.videoAPI === undefined) {
-      return this.loadVideo();
-    }
-
-    return Promise.resolve(this.videoAPI);
   }
 
   /**
@@ -305,6 +308,15 @@ export class VideoPlayer {
     }
   }
 
+  private getTransitionStatus(funcName: string): VideoPlayerStatus {
+    if (funcName in VideoPlayer.actionToTransitionMap) {
+      return VideoPlayer.actionToTransitionMap[funcName];
+    }
+    else {
+      throw new BadParameterException(`Function '${funcName}' not found in the VideoPlayer.actionToTransitionMap`);
+    }
+  }
+
   private logCtx(promiseId?: string, ctx?: string, message?: string): string {
     let sb = "";
     if (promiseId !== undefined) {
@@ -323,12 +335,12 @@ export class VideoPlayer {
   private getPromiseId(): string {
     return (Math.random() + 1).toString(36).substring(4); // A poor man's random string generator
   }
-  private queueAction<G>(ctx: string, callback: (...any: any[]) => Promise<G>, ...callbackParams: any[]): Promise<G> {
+  private queueAction<G>(funcName: string, callback: (...any: any[]) => Promise<G>, ...callbackParams: any[]): Promise<G> {
 
     const promiseId = this.getPromiseId();
-    const actionId = ctx+promiseId; //A bit of sugar-coating to make the actionQueue easier to track
+    const actionId = `${funcName}:${promiseId}`; //A bit of sugar-coating to make the actionQueue easier to track
 
-    const logFormat: string = this.logCtx(promiseId, ctx);
+    const logFormat: string = this.logCtx(promiseId, funcName);
 
     const timeouts: any = { // Store timeouts in an object so the interval can see itself from within :)
       actionQueueInterval: undefined,
@@ -336,11 +348,12 @@ export class VideoPlayer {
     };
 
     const promiseResolvedHandler = (p: G) => {
+      this.transition = undefined; // No longer transitioning anywhere
       window.clearTimeout(timeouts.promiseTimeout);
 
       const index: number = this.actionQueue.findIndex((storedActionId: string) => storedActionId === actionId);
       if (index !== 0) {
-        throw new UnknownStateException(this.logCtx(promiseId, ctx, "callback that was resolved was not the first action in the queue! index="+index));
+        throw new UnknownStateException(this.logCtx(promiseId, funcName, "callback that was resolved was not the first action in the queue! index="+index));
       }
       this.actionQueue.splice(index, 1); //Remove the action matching the current action, this should be the first action
 
@@ -369,11 +382,13 @@ export class VideoPlayer {
         timeouts.actionQueueInterval = window.setInterval(() => {
           //Check every 50ms if this action is next in queue
           if (this.actionQueue[0] === actionId) {
+            this.transition = this.getTransitionStatus(funcName); //Start transitioning
             callback.call(this.videoAPI, promiseId, ...callbackParams).then(resolve, reject);
             window.clearInterval(timeouts.actionQueueInterval); // Kill itself from within.
           }
         }, 50);
       } else {
+        this.transition = this.getTransitionStatus(funcName); //Start transitioning
         callback.call(this.videoAPI, promiseId, ...callbackParams).then(resolve, reject);
       }
     })

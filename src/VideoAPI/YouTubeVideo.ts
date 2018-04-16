@@ -34,6 +34,14 @@ export class YouTubeVideo extends VideoAPI {
     "buffering":  "3",
     "video cued": "5",
   };
+  private static ytToVAPIPlayerStates: {[key: string]: string} = {
+    "-1": VideoPlayerStatus.stopped,
+    "0":  VideoPlayerStatus.ended,
+    "1":  VideoPlayerStatus.started,
+    "2":  VideoPlayerStatus.paused,
+    "3":  VideoPlayerStatus.buffering,
+    "5":  VideoPlayerStatus.cued,
+  };
 
   private availablePlaybackRates: number[];
   private options: IVideoAPIOptions = {};
@@ -145,33 +153,21 @@ export class YouTubeVideo extends VideoAPI {
       const status = this.getStatus();
       if (status === VideoPlayerStatus.ended ||
           status === VideoPlayerStatus.paused ||
-          status === VideoPlayerStatus.videoCued ||
-          status === VideoPlayerStatus.unstarted
+          status === VideoPlayerStatus.cued ||
+          status === VideoPlayerStatus.stopped
         ) {
         logger.info(this.logCtx(actionId, ctx, `Video already ${status}`));
 
-        resolve(this);
+        return resolve(this);
       }
 
-      this.setStateChangeHandler("paused", actionId, (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
+      this.setStateChangeHandler(VideoPlayerStatus.paused, actionId, (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
         logger.debug(this.logCtx(actionId, ctx, "stateChangeHandlers.paused():> Play paused"));
-        this.stateChangeHandlerFulfilled("paused", actionId);
+        this.stateChangeHandlerFulfilled(VideoPlayerStatus.paused, actionId);
         resolve(this);
       });
       this.ytPlayer.pauseVideo();
     });
-  }
-
-  public playOrPauseVideo(actionId: string): Promise<YouTubeVideo> {
-    const ctx: string = "playOrPauseVideo";
-    logger.debug(this.logCtx(actionId, ctx));
-    if (this.ytPlayer === undefined) {
-      return Promise.reject(new UnknownStateException("YouTube Player not instantiated"));
-    } else if (this.getStatus() === VideoPlayerStatus.playing) {
-      return this.pauseVideo(actionId);
-    } else {
-      return this.startVideo(actionId);
-    }
   }
 
   /**
@@ -184,12 +180,12 @@ export class YouTubeVideo extends VideoAPI {
       const status: VideoPlayerStatus = this.getStatus();
       logger.debug(this.logCtx(actionId, ctx, `position:${position}, status:${status}`));
 
-      if (status === VideoPlayerStatus.paused || status === VideoPlayerStatus.playing || status === VideoPlayerStatus.buffering) {
+      if (status === VideoPlayerStatus.paused || status === VideoPlayerStatus.started || status === VideoPlayerStatus.buffering) {
         //These statuses are ok to seek from
         return this._seekVideo(actionId, position);
       } else {
         if (this.ytPlayer === undefined) {
-          return Promise.reject(new UnknownStateException("YouTube player not loaded with a video yet. Cannot seek before loading a video."));
+          return Promise.reject(new UnknownStateException(this.logCtx(actionId, ctx, "YouTube player not loaded with a video yet. Cannot seek before loading a video.")));
         }
 
         logger.debug(this.logCtx(actionId, ctx,
@@ -266,15 +262,15 @@ export class YouTubeVideo extends VideoAPI {
     logger.debug(this.logCtx(actionId, ctx));
 
     return new Promise((resolve, reject): void => {
-      if (this.getStatus() === VideoPlayerStatus.playing) {
+      if (this.getStatus() === VideoPlayerStatus.started) {
         logger.info(this.logCtx(actionId, ctx, `Video already status=${this.getStatus()}`));
 
-        resolve(this);
+        return resolve(this);
       }
 
-      this.setStateChangeHandler("playing", actionId, (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
+      this.setStateChangeHandler(VideoPlayerStatus.started, actionId, (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
         logger.debug(this.logCtx(actionId, ctx, "stateChangeHandlers.playing():> Play started"));
-        this.stateChangeHandlerFulfilled("playing", actionId);
+        this.stateChangeHandlerFulfilled(VideoPlayerStatus.started, actionId);
         resolve(this);
       });
       this.ytPlayer.playVideo();
@@ -286,9 +282,15 @@ export class YouTubeVideo extends VideoAPI {
     logger.debug(this.logCtx(actionId, ctx));
 
     return new Promise((resolve, reject): void => {
-      this.setStateChangeHandler("unstarted", actionId, (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
+      if (this.getStatus() === VideoPlayerStatus.stopped) {
+        logger.info(this.logCtx(actionId, ctx, `Video already status=${this.getStatus()}`));
+
+        return resolve(this);
+      }
+
+      this.setStateChangeHandler(VideoPlayerStatus.stopped, actionId, (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
         logger.debug(this.logCtx(actionId, ctx, `stateChangeHandlers.${this.getStatus()}():> Play unstarted(stopped)`));
-        this.stateChangeHandlerFulfilled("unstarted", actionId);
+        this.stateChangeHandlerFulfilled(VideoPlayerStatus.stopped, actionId);
         resolve(this);
       });
       this.ytPlayer.stopVideo();
@@ -300,9 +302,9 @@ export class YouTubeVideo extends VideoAPI {
    * @param state State received from the YT.Player.getPlayerState()
    */
   public translatePlayerStateEnumToString(state: YT.PlayerState): string {
-    if (YouTubeVideo.ytPlayerStates[state]) {
+    if (YouTubeVideo.ytToVAPIPlayerStates[state]) {
 
-      return YouTubeVideo.ytPlayerStates[state];
+      return YouTubeVideo.ytToVAPIPlayerStates[state];
     } else {
       const msg: string = `translatePlayerStateEnumToString():> Unknown state=${state}`;
       logger.fatal(msg);
@@ -323,7 +325,7 @@ export class YouTubeVideo extends VideoAPI {
       // Use a timeout to check if we are buffering, and if not, mark the seek as complete.
       let cancel: number;
       if (oldStatus === VideoPlayerStatus.paused ||
-          oldStatus === VideoPlayerStatus.playing) {
+          oldStatus === VideoPlayerStatus.started) {
         cancel = window.setTimeout(() => {
           if (this.getStatus() !== VideoPlayerStatus.buffering) {
             logger.debug(this.logCtx(actionId, ctx,

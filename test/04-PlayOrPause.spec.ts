@@ -39,7 +39,7 @@ describe("Seek a video", () => {
       .playOrPauseVideo()
       .then(() => {
         expect(videoPlayer.getStatus())
-        .toBe(VideoPlayerStatus.playing);
+        .toBe(VideoPlayerStatus.started);
       }),
     );
     it("playOrPauseVideo()-action triggered again", () =>
@@ -55,7 +55,7 @@ describe("Seek a video", () => {
       .playOrPauseVideo()
       .then(() => {
         expect(videoPlayer.getStatus())
-        .toBe(VideoPlayerStatus.playing);
+        .toBe(VideoPlayerStatus.started);
       }),
     );
   });
@@ -65,7 +65,7 @@ describe("Seek a video", () => {
       videoPlayer.stopVideo()
       .then(() => {
         expect(videoPlayer.getStatus())
-        .toBe(VideoPlayerStatus.unstarted);
+        .toBe(VideoPlayerStatus.stopped);
       }),
     );
 
@@ -74,7 +74,7 @@ describe("Seek a video", () => {
       .playOrPauseVideo()
       .then(() => {
         expect(videoPlayer.getStatus())
-        .toBe(VideoPlayerStatus.playing);
+        .toBe(VideoPlayerStatus.started);
       }),
     );
     it("playOrPauseVideo()-action triggered again", () =>
@@ -90,7 +90,7 @@ describe("Seek a video", () => {
       .playOrPauseVideo()
       .then(() => {
         expect(videoPlayer.getStatus())
-        .toBe(VideoPlayerStatus.playing);
+        .toBe(VideoPlayerStatus.started);
       }),
     );
   });
