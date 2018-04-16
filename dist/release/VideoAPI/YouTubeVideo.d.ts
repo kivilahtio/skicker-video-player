@@ -29,6 +29,9 @@ export declare class YouTubeVideo extends VideoAPI {
      * @param ytPlayerOptions id must be given to satisfy Typing, but can be later overloaded with loadVideo()
      */
     constructor(rootElement: HTMLElement, options?: IVideoAPIOptions);
+    canPause(): boolean;
+    canStart(): boolean;
+    canStop(): boolean;
     /**
      * Delete this instance and kill all pending actions
      */
@@ -67,6 +70,7 @@ export declare class YouTubeVideo extends VideoAPI {
     translatePlayerStateEnumToString(state: YT.PlayerState): string;
     /** Just seek with no safety checks */
     private _seekVideo(actionId, position);
+    private canDoAction(action);
     /**
      * Check if the desired rate is in the list of allowed playback rates, if not, raise an exception
      *

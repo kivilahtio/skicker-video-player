@@ -77,6 +77,12 @@ export abstract class VideoAPI {
   private name: string;
   private videoUrl: URL;
 
+  /** Synchronously check if it would make any difference to pauseVideo() */
+  public abstract canPause(): boolean;
+  /** Synchronously check if it would make any difference to startVideo() */
+  public abstract canStart(): boolean;
+  /** Synchronously check if it would make any difference to stopVideo() */
+  public abstract canStop(): boolean;
   public abstract destroy(): void;
   /** Returns the duration of the video in seconds */
   public abstract getDuration(): number | undefined;

@@ -64,6 +64,25 @@ export class VideoPlayer {
     }
   }
 
+  public canPause(): boolean {
+    if (this.videoAPI) {
+      return this.videoAPI.canPause();
+    }
+    return false;
+  }
+  public canStart(): boolean {
+    if (this.videoAPI) {
+      return this.videoAPI.canStart();
+    }
+    return true; //We can start even when videoAPI is not loaded, then the video is loaded transparently.
+  }
+  public canStop(): boolean {
+    if (this.videoAPI) {
+      return this.videoAPI.canStop();
+    }
+    return false;
+  }
+
   /**
    * Release this player and all assets to garbage collection (hopefully)
    */

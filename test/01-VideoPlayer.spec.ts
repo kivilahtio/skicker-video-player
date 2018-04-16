@@ -82,6 +82,11 @@ describe("VideoPlayer, ", () => {
       expect(videoPlayer.getVolume()).toBe(undefined);
       expect(videoPlayer.setVolume(66)).toBe(undefined, "Then setVolume() overloads the IVideoOptions volume-directive if given when Video not laoded yet."); //setVolume has no return value
     });
+    it("can do actions when video not loaded", () => {
+      expect(videoPlayer.canPause()).toBe(false, "Then canPause() is false");
+      expect(videoPlayer.canStart()).toBe(true, "Then canStart() is true");
+      expect(videoPlayer.canStop()).toBe(false, "Then canStop() is false");
+    });
 
     it("load video", () => {
       logger.info("load video");
@@ -114,6 +119,11 @@ describe("VideoPlayer, ", () => {
       expect(videoPlayer.setVolume(88)).toBe(undefined, "Given setVolume() set volume normally.");
       expect(videoPlayer.getVolume()).toBe(88, "Then getVolume() returns the recently set volume.");
     });
+    it("can do actions when video is loaded", () => {
+      expect(videoPlayer.canPause()).toBe(false, "Then canPause() is false");
+      expect(videoPlayer.canStart()).toBe(true, "Then canStart() is true");
+      expect(videoPlayer.canStop()).toBe(false, "Then canStop() is false");
+    });
   });
 
   describe("VideoPlayer pausing, ", () => {
@@ -129,7 +139,10 @@ describe("VideoPlayer, ", () => {
     it("Stop when Video is cued", () => {
       logger.info("Stop when Video is cued");
       expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cued, "Given the video is 'cued'");
-      return tu.stop();
+      return videoPlayer.stopVideo()
+      .then((vapi: VideoPlayer) => {
+        expect(vapi.getStatus()).toBe(VideoPlayerStatus.cued, "Then stopping it is ignored and video is 'cued'");
+      });
     });
 
     it("Start when Video is cued", () => {
@@ -137,11 +150,21 @@ describe("VideoPlayer, ", () => {
       expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cued, "Given the video is 'cued'");
       return tu.start();
     });
+    it("can do actions when video is started", () => {
+      expect(videoPlayer.canPause()).toBe(true, "Then canPause() is true");
+      expect(videoPlayer.canStart()).toBe(false, "Then canStart() is false");
+      expect(videoPlayer.canStop()).toBe(true, "Then canStop() is true");
+    });
 
     it("Stop when Video is playing", () => {
       logger.info("Stop when Video is playing");
       expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.started, "Given the video is 'started'");
       return tu.stop();
+    });
+    it("can do actions when video is stopped", () => {
+      expect(videoPlayer.canPause()).toBe(false, "Then canPause() is false");
+      expect(videoPlayer.canStart()).toBe(true, "Then canStart() is true");
+      expect(videoPlayer.canStop()).toBe(false, "Then canStop() is false");
     });
 
     it("Pause when Video is stopped, this causes nothing to happen", () => {

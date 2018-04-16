@@ -12,4 +12,4 @@ const requireAll = (requireContext: any) => { requireContext.keys().map(requireC
 declare var require: any;
 requireAll(require.context("./helpers/", true, /\.ts$/));
 //requireAll(require.context("./", true, /[sS]pec\.ts$/));
-requireAll(require.context("./", true, /Interact.[sS]pec\.ts$/));
+requireAll(require.context("./", true, /[sS]pec\.ts$/));

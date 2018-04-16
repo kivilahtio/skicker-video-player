@@ -43,6 +43,24 @@ class VideoPlayer {
             this.parseURL(url);
         }
     }
+    canPause() {
+        if (this.videoAPI) {
+            return this.videoAPI.canPause();
+        }
+        return false;
+    }
+    canStart() {
+        if (this.videoAPI) {
+            return this.videoAPI.canStart();
+        }
+        return true; //We can start even when videoAPI is not loaded, then the video is loaded transparently.
+    }
+    canStop() {
+        if (this.videoAPI) {
+            return this.videoAPI.canStop();
+        }
+        return false;
+    }
     /**
      * Release this player and all assets to garbage collection (hopefully)
      */

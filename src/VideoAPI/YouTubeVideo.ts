@@ -15,6 +15,36 @@ import { StateChangeHandlerReservedException } from "../Exception/StateChangeHan
 const logger: log4javascript.Logger = LoggerManager.getLogger("Skicker.VideoAPI.YouTubeVideo");
 
 /**
+ * List transitions that make no sense. Typically used to detect if we are in a paused state or transitioning into such while trying to pause again.
+ * or something similarly useless. Actions can typically be invoked and the Player does it's best to put itself into such a state that the action
+ * can be fulfilled.
+ * Mainly used to more easily define if we should do some action or not, before invoking it from outside the Player.
+ */
+const uselessTransitions = new Map<string, Map<VideoPlayerStatus, boolean>>()
+.set("pauseVideo", new Map<VideoPlayerStatus, boolean>()
+.set(VideoPlayerStatus.notLoaded, true)
+.set(VideoPlayerStatus.paused, true)
+.set(VideoPlayerStatus.pausing, true)
+.set(VideoPlayerStatus.ended, true)
+.set(VideoPlayerStatus.ending, true)
+.set(VideoPlayerStatus.cued, true)
+.set(VideoPlayerStatus.cueing, true)
+.set(VideoPlayerStatus.stopped, true)
+.set(VideoPlayerStatus.stopping, true));
+uselessTransitions
+.set("startVideo", new Map<VideoPlayerStatus, boolean>()
+.set(VideoPlayerStatus.started, true)
+.set(VideoPlayerStatus.starting, true));
+uselessTransitions
+.set("stopVideo", new Map<VideoPlayerStatus, boolean>()
+.set(VideoPlayerStatus.notLoaded, true)
+.set(VideoPlayerStatus.cued, true)
+.set(VideoPlayerStatus.cueing, true)
+.set(VideoPlayerStatus.stopped, true)
+.set(VideoPlayerStatus.stopping, true));
+
+
+/**
  * Implements the YouTube IFrame Video Player API, wrapping it into nice promises
  */
 export class YouTubeVideo extends VideoAPI {
@@ -69,6 +99,16 @@ export class YouTubeVideo extends VideoAPI {
     if (options) {
       this.options = options;
     }
+  }
+
+  public canPause(): boolean {
+    return this.canDoAction("pauseVideo");
+  }
+  public canStart(): boolean {
+    return this.canDoAction("startVideo");
+  }
+  public canStop(): boolean {
+    return this.canDoAction("stopVideo");
   }
 
   /**
@@ -150,12 +190,7 @@ export class YouTubeVideo extends VideoAPI {
     logger.debug(this.logCtx(actionId, ctx));
 
     return new Promise((resolve, reject) => {
-      const status = this.getStatus();
-      if (status === VideoPlayerStatus.ended ||
-          status === VideoPlayerStatus.paused ||
-          status === VideoPlayerStatus.cued ||
-          status === VideoPlayerStatus.stopped
-        ) {
+      if (! this.canPause()) {
         logger.info(this.logCtx(actionId, ctx, `Video already ${status}`));
 
         return resolve(this);
@@ -265,7 +300,7 @@ export class YouTubeVideo extends VideoAPI {
     logger.debug(this.logCtx(actionId, ctx));
 
     return new Promise((resolve, reject): void => {
-      if (this.getStatus() === VideoPlayerStatus.started) {
+      if (! this.canStart()) {
         logger.info(this.logCtx(actionId, ctx, `Video already status=${this.getStatus()}`));
 
         return resolve(this);
@@ -285,7 +320,7 @@ export class YouTubeVideo extends VideoAPI {
     logger.debug(this.logCtx(actionId, ctx));
 
     return new Promise((resolve, reject): void => {
-      if (this.getStatus() === VideoPlayerStatus.stopped) {
+      if (! this.canStop()) {
         logger.info(this.logCtx(actionId, ctx, `Video already status=${this.getStatus()}`));
 
         return resolve(this);
@@ -353,6 +388,17 @@ export class YouTubeVideo extends VideoAPI {
       //this.setStateChangeHandler(VideoPlayerStatus.ended, actionId, func); //It is possible to seek to the end
       this.ytPlayer.seekTo(position, true);
     });
+  }
+
+  private canDoAction(action: string): boolean {
+    const ac = uselessTransitions.get(action);
+    if (ac) {
+      if (ac.get(this.getStatus())) {
+        return false;
+      } else {
+        return true;
+      }
+    }
   }
 
   /**

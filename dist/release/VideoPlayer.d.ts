@@ -31,6 +31,9 @@ export declare class VideoPlayer {
      * @param options
      */
     constructor(rootElement: HTMLElement, options?: IVideoAPIOptions, url?: URL);
+    canPause(): boolean;
+    canStart(): boolean;
+    canStop(): boolean;
     /**
      * Release this player and all assets to garbage collection (hopefully)
      */

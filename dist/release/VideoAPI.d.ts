@@ -63,6 +63,12 @@ export declare abstract class VideoAPI {
     private apiUrl;
     private name;
     private videoUrl;
+    /** Synchronously check if it would make any difference to pauseVideo() */
+    abstract canPause(): boolean;
+    /** Synchronously check if it would make any difference to startVideo() */
+    abstract canStart(): boolean;
+    /** Synchronously check if it would make any difference to stopVideo() */
+    abstract canStop(): boolean;
     abstract destroy(): void;
     /** Returns the duration of the video in seconds */
     abstract getDuration(): number | undefined;
