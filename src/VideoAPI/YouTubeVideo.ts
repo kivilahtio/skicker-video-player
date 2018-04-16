@@ -246,14 +246,17 @@ export class YouTubeVideo extends VideoAPI {
    * @param volume Volume level. 0 sets the player muted
    */
   public setVolume(volume: number): void {
-    logger.debug(`setVolume():> param volume=${volume}`);
-    if (volume === 0) {
-      this.ytPlayer.mute();
-    } else {
-      if (this.ytPlayer.isMuted()) {
-        this.ytPlayer.unMute();
+    if (this.ytPlayer) {
+      if (volume === 0) {
+        this.ytPlayer.mute();
+      } else {
+        if (this.ytPlayer.isMuted()) {
+          this.ytPlayer.unMute();
+        }
+        this.ytPlayer.setVolume(volume);
       }
-      this.ytPlayer.setVolume(volume);
+    } else {
+      logger.warn("YT.Player not loaded/ready yet! Cannot set volume.");
     }
   }
 

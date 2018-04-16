@@ -78,6 +78,10 @@ describe("VideoPlayer, ", () => {
     it("getStatus() when video not loaded", () => {
       expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.notLoaded);
     });
+    it("setVolume() when video not loaded", () => {
+      expect(videoPlayer.getVolume()).toBe(undefined);
+      expect(videoPlayer.setVolume(66)).toBe(undefined, "Then setVolume() overloads the IVideoOptions volume-directive if given when Video not laoded yet."); //setVolume has no return value
+    });
 
     it("load video", () => {
       logger.info("load video");
@@ -104,6 +108,11 @@ describe("VideoPlayer, ", () => {
     });
     it("getStatus() when video is loaded", () => {
       expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cued);
+    });
+    it("setVolume() when video is loaded", () => {
+      expect(videoPlayer.getVolume()).toBe(66, "Then setVolume() triggered before video was loaded, gets the VideoAPI volume set.");
+      expect(videoPlayer.setVolume(88)).toBe(undefined, "Given setVolume() set volume normally.");
+      expect(videoPlayer.getVolume()).toBe(88, "Then getVolume() returns the recently set volume.");
     });
   });
 

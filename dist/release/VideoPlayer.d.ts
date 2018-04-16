@@ -59,6 +59,7 @@ export declare class VideoPlayer {
      * Returns the ID of the video being played
      */
     getVideoId(): string;
+    getVolume(): number | undefined;
     /**
      * Prepares a video for playing.
      * @param id Video id of the remote service
@@ -79,6 +80,10 @@ export declare class VideoPlayer {
     playOrPauseVideo(): Promise<VideoPlayer>;
     seekVideo(position: number): Promise<VideoPlayer>;
     setPlaybackRate(rate: number): Promise<VideoPlayer>;
+    /**
+     * @param volume Volume level. 0 sets the player muted
+     */
+    setVolume(volume: number): void;
     startVideo(): Promise<VideoPlayer>;
     stopVideo(): Promise<VideoPlayer>;
     private createVideoAPI();

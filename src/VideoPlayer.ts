@@ -144,6 +144,13 @@ export class VideoPlayer {
     return this.videoId;
   }
 
+  public getVolume(): number | undefined {
+    if (this.videoAPI) {
+      return this.videoAPI.getVolume();
+    }
+    return undefined;
+  }
+
   /**
    * Prepares a video for playing.
    * @param id Video id of the remote service
@@ -228,6 +235,18 @@ export class VideoPlayer {
     }
 
     return this.queueAction("setPlaybackRate", this.videoAPI.setPlaybackRate, rate)
+  }
+
+  /**
+   * @param volume Volume level. 0 sets the player muted
+   */
+  public setVolume(volume: number): void {
+    if (this.videoAPI === undefined) {
+      this.options.volume = volume;
+      logger.debug(`setVolume():> param volume=${volume}. Updating video options, because video not loaded yet.`);
+      return;
+    }
+    this.videoAPI.setVolume(volume);
   }
 
   public startVideo(): Promise<VideoPlayer> {
