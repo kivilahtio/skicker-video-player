@@ -9,6 +9,7 @@ import { IVideoAPIOptions, VideoAPI, VideoPlayerStatus } from "../VideoAPI";
  */
 export declare class YouTubeVideo extends VideoAPI {
     private static ytPlayerStates;
+    private static ytToVAPIPlayerStates;
     private availablePlaybackRates;
     private options;
     /** Is set when the YTPlayer is created to timeout the creation promise */
@@ -42,7 +43,6 @@ export declare class YouTubeVideo extends VideoAPI {
      * https://developers.google.com/youtube/iframe_api_reference#pauseVideo
      */
     pauseVideo(actionId: string): Promise<YouTubeVideo>;
-    playOrPauseVideo(actionId: string): Promise<YouTubeVideo>;
     /**
      *  Seeking is a bit tricky since we need to be in the proper state. Otherwise we get strange errors and behaviour from YouTube Player.
      *  If not in playing or paused -states, forcibly move there.

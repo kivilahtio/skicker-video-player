@@ -8,6 +8,8 @@ import { IVideoAPIOptions, SupportedVideoAPIs, VideoAPI, VideoPlayerStatus } fro
  * videoPlayer.startVideo().then(() => {alert("success")}).catch((err) => {alert(err.toString())})
  */
 export declare class VideoPlayer {
+    /** Given actions always trigger then matching transition statuses temporarily, until the Action has been resolved */
+    private static actionToTransitionMap;
     /**
      * How long does each Promise created in this class take to timeout?
      * This is used to protect and catch against leaking promises that never resolve.
@@ -19,6 +21,7 @@ export declare class VideoPlayer {
     private api;
     private options;
     private rootElement;
+    private transition;
     private videoAPI;
     private videoId;
     private youTubeURLParsingRegexp;
@@ -46,9 +49,12 @@ export declare class VideoPlayer {
     /** Get the container for this VideoPlayer */
     getRootElement(): HTMLElement;
     /**
-     * Gets the status of the current video player implementation
+     * Gets the status of the current video player implementation or the current transition.
+     * Remeber to check for both the status and the transition,
+     * eg. started || starting
      */
     getStatus(): VideoPlayerStatus;
+    getTransition(): VideoPlayerStatus;
     /**
      * Returns the video API implementation
      */
@@ -81,10 +87,6 @@ export declare class VideoPlayer {
     stopVideo(): Promise<VideoAPI>;
     private createVideoAPI();
     /**
-     * Loads the VideoPlayer instance for the known URL if missing
-     */
-    private loadIfNotYetLoaded();
-    /**
      * given the URL of the video, decides which VideoAPI to use and extracts other available information
      * such as the video id
      *
@@ -93,8 +95,9 @@ export declare class VideoPlayer {
      * @throws BadParameterException if the URL is missing some important parameter
      */
     private parseURL(url);
+    private getTransitionStatus(funcName);
     private logCtx(promiseId?, ctx?, message?);
     /** Get a random string intended to track down individual promises */
     private getPromiseId();
-    private queueAction<G>(ctx, callback, ...callbackParams);
+    private queueAction<G>(funcName, callback, ...callbackParams);
 }

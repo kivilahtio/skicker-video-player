@@ -133,7 +133,7 @@ form.onsubmit = function (e) {
     videoPlayers.push(videoPlayer);
     videoPlayer._intervall = window.setInterval(() => {
         try {
-            $(vpTime).html(videoPlayer.getVideoAPI().getPosition() + "");
+            $(vpTime).html(videoPlayer.getStatus() + " : " + videoPlayer.getPosition());
         }
         catch (e) {
             //console.log(e);
