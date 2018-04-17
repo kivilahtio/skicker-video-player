@@ -90,20 +90,22 @@ describe("VideoPlayer, ", () => {
 
     it("load video", () => {
       logger.info("load video");
+      const timeouts = {
+        interval: 0,
+        repetitions: 0,
+      };
+
       expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.notLoaded);
       const promise = videoPlayer.loadVideo()
       .then((vapi: VideoPlayer) => {
+        window.clearInterval(timeouts.interval);
         expect(vapi.getStatus()).toBe(VideoPlayerStatus.cued, "Finally Video is loaded");
       });
 
       //At this time YouTube player internals are in an inconsistent state and getStatus() can easily throw errors if not handled properly
       //  (this.ytPlayer.getPlayerState is not a function)
-      const timeouts = {
-        interval: 0,
-        repetitions: 0,
-      };
       timeouts.interval = window.setInterval(() => {
-        if (timeouts.repetitions++ > 2) {
+        if (timeouts.repetitions++ > 50) {
           window.clearInterval(timeouts.interval);
         }
         expect(videoPlayer.getStatus()).toBe(VideoPlayerStatus.cueing);

@@ -95,7 +95,7 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
             }
         }
         catch (err) {
-            if (!(err.toString().match(/this.ytPlayer.getDuration is not a function/))) {
+            if ((err.toString().match(/this.ytPlayer.getDuration is not a function/))) {
                 return undefined;
             }
             throw err;
@@ -111,7 +111,7 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
             }
         }
         catch (err) {
-            if (!(err.toString().match(/this.ytPlayer.getPlaybackRate is not a function/))) {
+            if ((err.toString().match(/this.ytPlayer.getPlaybackRate is not a function/))) {
                 return undefined;
             }
             throw err;
@@ -127,7 +127,7 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
             }
         }
         catch (err) {
-            if (!(err.toString().match(/this.ytPlayer.getCurrentTime is not a function/))) {
+            if ((err.toString().match(/this.ytPlayer.getCurrentTime is not a function/))) {
                 return undefined;
             }
             throw err;
@@ -144,7 +144,7 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
             }
         }
         catch (err) {
-            if (!(err.toString().match(/this.ytPlayer.getPlayerState is not a function/))) {
+            if ((err.toString().match(/this.ytPlayer.getPlayerState is not a function/))) {
                 return VideoAPI_1.VideoPlayerStatus.notLoaded;
             }
             throw err;
@@ -160,7 +160,7 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
             }
         }
         catch (err) {
-            if (!(err.toString().match(/this.ytPlayer.getVolume is not a function/))) {
+            if ((err.toString().match(/this.ytPlayer.getVolume is not a function/))) {
                 return undefined;
             }
             throw err;

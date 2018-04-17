@@ -134,7 +134,7 @@ export class YouTubeVideo extends VideoAPI {
         return undefined;
       }
     } catch (err) {
-      if (!(err.toString().match(/this.ytPlayer.getDuration is not a function/))) { //This error is expected and is ok
+      if ((err.toString().match(/this.ytPlayer.getDuration is not a function/))) { //This error is expected and is ok
         return undefined;
       }
       throw err;
@@ -149,7 +149,7 @@ export class YouTubeVideo extends VideoAPI {
         return undefined;
       }
     } catch (err) {
-      if (!(err.toString().match(/this.ytPlayer.getPlaybackRate is not a function/))) { //This error is expected and is ok
+      if ((err.toString().match(/this.ytPlayer.getPlaybackRate is not a function/))) { //This error is expected and is ok
         return undefined;
       }
       throw err;
@@ -164,7 +164,7 @@ export class YouTubeVideo extends VideoAPI {
         return undefined;
       }
     } catch (err) {
-      if (!(err.toString().match(/this.ytPlayer.getCurrentTime is not a function/))) { //This error is expected and is ok
+      if ((err.toString().match(/this.ytPlayer.getCurrentTime is not a function/))) { //This error is expected and is ok
         return undefined;
       }
       throw err;
@@ -180,7 +180,7 @@ export class YouTubeVideo extends VideoAPI {
         return undefined;
       }
     } catch (err) {
-      if (!(err.toString().match(/this.ytPlayer.getPlayerState is not a function/))) { //This error is expected and is ok
+      if ((err.toString().match(/this.ytPlayer.getPlayerState is not a function/))) { //This error is expected and is ok
         return VideoPlayerStatus.notLoaded;
       }
       throw err;
@@ -195,7 +195,7 @@ export class YouTubeVideo extends VideoAPI {
         return undefined;
       }
     } catch (err) {
-      if (!(err.toString().match(/this.ytPlayer.getVolume is not a function/))) { //This error is expected and is ok
+      if ((err.toString().match(/this.ytPlayer.getVolume is not a function/))) { //This error is expected and is ok
         return undefined;
       }
       throw err;
