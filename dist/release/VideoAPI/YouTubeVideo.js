@@ -86,35 +86,85 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
         this.options = undefined;
     }
     getDuration() {
-        if (this.ytPlayer) {
-            return this.ytPlayer.getDuration();
+        try {
+            if (this.ytPlayer) {
+                return this.ytPlayer.getDuration();
+            }
+            else {
+                return undefined;
+            }
         }
-        return undefined;
+        catch (err) {
+            if (!(err.toString().match(/this.ytPlayer.getDuration is not a function/))) {
+                return undefined;
+            }
+            throw err;
+        }
     }
     getPlaybackRate() {
-        if (this.ytPlayer) {
-            return this.ytPlayer.getPlaybackRate();
+        try {
+            if (this.ytPlayer) {
+                return this.ytPlayer.getPlaybackRate();
+            }
+            else {
+                return undefined;
+            }
         }
-        return undefined;
+        catch (err) {
+            if (!(err.toString().match(/this.ytPlayer.getPlaybackRate is not a function/))) {
+                return undefined;
+            }
+            throw err;
+        }
     }
     getPosition() {
-        if (this.ytPlayer) {
-            return this.ytPlayer.getCurrentTime();
+        try {
+            if (this.ytPlayer) {
+                return this.ytPlayer.getCurrentTime();
+            }
+            else {
+                return undefined;
+            }
         }
-        return undefined;
+        catch (err) {
+            if (!(err.toString().match(/this.ytPlayer.getCurrentTime is not a function/))) {
+                return undefined;
+            }
+            throw err;
+        }
     }
     getStatus() {
-        if (this.ytPlayer) {
-            const stateName = this.translatePlayerStateEnumToString(this.ytPlayer.getPlayerState());
-            return stateName;
+        try {
+            if (this.ytPlayer) {
+                const stateName = this.translatePlayerStateEnumToString(this.ytPlayer.getPlayerState());
+                return stateName;
+            }
+            else {
+                return undefined;
+            }
         }
-        return VideoAPI_1.VideoPlayerStatus.notLoaded;
+        catch (err) {
+            if (!(err.toString().match(/this.ytPlayer.getPlayerState is not a function/))) {
+                return VideoAPI_1.VideoPlayerStatus.notLoaded;
+            }
+            throw err;
+        }
     }
     getVolume() {
-        if (this.ytPlayer) {
-            return this.ytPlayer.getVolume();
+        try {
+            if (this.ytPlayer) {
+                return this.ytPlayer.getVolume();
+            }
+            else {
+                return undefined;
+            }
         }
-        return undefined;
+        catch (err) {
+            if (!(err.toString().match(/this.ytPlayer.getVolume is not a function/))) {
+                return undefined;
+            }
+            throw err;
+        }
     }
     loadVideo(actionId, videoId, options) {
         const ctx = "loadVideo";
@@ -140,7 +190,7 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
         logger.debug(this.logCtx(actionId, ctx));
         return new Promise((resolve, reject) => {
             if (!this.canPause()) {
-                logger.info(this.logCtx(actionId, ctx, `Video already ${status}`));
+                logger.info(this.logCtx(actionId, ctx, `Video already ${this.getStatus()}`));
                 return resolve(this);
             }
             this.setStateChangeHandler(VideoAPI_1.VideoPlayerStatus.paused, actionId, (ytv, event) => {

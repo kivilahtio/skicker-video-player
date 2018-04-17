@@ -127,39 +127,79 @@ export class YouTubeVideo extends VideoAPI {
   }
 
   public getDuration(): number | undefined {
-    if (this.ytPlayer) {
-      return this.ytPlayer.getDuration();
+    try {
+      if (this.ytPlayer) {
+        return this.ytPlayer.getDuration();
+      } else {
+        return undefined;
+      }
+    } catch (err) {
+      if (!(err.toString().match(/this.ytPlayer.getDuration is not a function/))) { //This error is expected and is ok
+        return undefined;
+      }
+      throw err;
     }
-    return undefined;
   }
 
   public getPlaybackRate(): number | undefined {
-    if (this.ytPlayer) {
-      return this.ytPlayer.getPlaybackRate();
+    try {
+      if (this.ytPlayer) {
+        return this.ytPlayer.getPlaybackRate();
+      } else {
+        return undefined;
+      }
+    } catch (err) {
+      if (!(err.toString().match(/this.ytPlayer.getPlaybackRate is not a function/))) { //This error is expected and is ok
+        return undefined;
+      }
+      throw err;
     }
-    return undefined;
   }
 
   public getPosition(): number | undefined {
-    if (this.ytPlayer) {
-      return this.ytPlayer.getCurrentTime();
+    try {
+      if (this.ytPlayer) {
+        return this.ytPlayer.getCurrentTime();
+      } else {
+        return undefined;
+      }
+    } catch (err) {
+      if (!(err.toString().match(/this.ytPlayer.getCurrentTime is not a function/))) { //This error is expected and is ok
+        return undefined;
+      }
+      throw err;
     }
-    return undefined;
   }
 
   public getStatus(): VideoPlayerStatus {
-    if (this.ytPlayer) {
-      const stateName: string = this.translatePlayerStateEnumToString(this.ytPlayer.getPlayerState());
-      return stateName as VideoPlayerStatus;
+    try {
+      if (this.ytPlayer) {
+        const stateName: string = this.translatePlayerStateEnumToString(this.ytPlayer.getPlayerState());
+        return stateName as VideoPlayerStatus;
+      } else {
+        return undefined;
+      }
+    } catch (err) {
+      if (!(err.toString().match(/this.ytPlayer.getPlayerState is not a function/))) { //This error is expected and is ok
+        return VideoPlayerStatus.notLoaded;
+      }
+      throw err;
     }
-    return VideoPlayerStatus.notLoaded;
   }
 
   public getVolume(): number | undefined {
-    if (this.ytPlayer) {
-      return this.ytPlayer.getVolume();
+    try {
+      if (this.ytPlayer) {
+        return this.ytPlayer.getVolume();
+      } else {
+        return undefined;
+      }
+    } catch (err) {
+      if (!(err.toString().match(/this.ytPlayer.getVolume is not a function/))) { //This error is expected and is ok
+        return undefined;
+      }
+      throw err;
     }
-    return undefined;
   }
 
   public loadVideo(actionId: string, videoId:string, options?: IVideoAPIOptions): Promise<YouTubeVideo> {
@@ -191,7 +231,7 @@ export class YouTubeVideo extends VideoAPI {
 
     return new Promise((resolve, reject) => {
       if (! this.canPause()) {
-        logger.info(this.logCtx(actionId, ctx, `Video already ${status}`));
+        logger.info(this.logCtx(actionId, ctx, `Video already ${this.getStatus()}`));
 
         return resolve(this);
       }

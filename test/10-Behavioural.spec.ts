@@ -60,7 +60,7 @@ describe("Play a video from YouTube using a headless player,", () => {
       }));
 
       //Expect a lot of actions to be waiting in the queue.
-      expect(actionQueue.length).toBe(3, "3 actions queued and waiting to resolve.");
+      expect(actionQueue.length).toBe(3, "Given 3 actions queued and waiting to resolve.");
 
       return Promise.all(promises)
       .then(() => { logger.info("Queue a bit ended"); });
