@@ -3,6 +3,7 @@
  */
 export declare enum SupportedVideoAPIs {
     YouTube = "YouTube",
+    HTML5Video = "HTML5Video",
 }
 export declare enum VideoPlayerStatus {
     /** VideoPlayer has been initialized, but the VideoAPI has not been loaded or the VideoAPI is not available */
@@ -84,6 +85,7 @@ export declare abstract class VideoAPI {
      */
     abstract seekVideo(actionId: string, position: number): Promise<VideoAPI>;
     abstract setPlaybackRate(actionId: string, playbackRate: number): Promise<VideoAPI>;
+    /** 0 is mute, 100 is full volume */
     abstract setVolume(volume: number): void;
     abstract startVideo(actionId: string): Promise<VideoAPI>;
     abstract stopVideo(actionId: string): Promise<VideoAPI>;

@@ -9,6 +9,10 @@
  * Special importable file types webpack uses to load into javascript objects
  */
 
+declare module '*.mp4' {
+  const content: object;
+  export default content;
+}
 declare module '*.csv' {
   const content: object;
   export default content;

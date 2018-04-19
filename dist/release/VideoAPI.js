@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var SupportedVideoAPIs;
 (function (SupportedVideoAPIs) {
     SupportedVideoAPIs["YouTube"] = "YouTube";
+    SupportedVideoAPIs["HTML5Video"] = "HTML5Video";
 })(SupportedVideoAPIs = exports.SupportedVideoAPIs || (exports.SupportedVideoAPIs = {}));
 /*
  * Statuses the VideoPlayer can be in.

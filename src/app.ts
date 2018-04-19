@@ -46,6 +46,12 @@ const logger: log4javascript.Logger = LoggerManager.getLogger("Skicker");
 import * as $ from "jquery";
 import "./app.css";
 
+const exampleVideos: any = {
+  local1: "http://localhost:5000/"+require("../test/helpers/aarnilasku.mp4"),
+  local2: "http://localhost:5000/"+require("../test/helpers/aarnilammas.mp4"),
+  yt1: "https://www.youtube.com/watch?v=duQ9_578RKw",
+};
+
 import { IVideoAPIOptions, VideoAPI } from "./VideoAPI";
 import { VideoPlayer } from "./VideoPlayer";
 
@@ -181,3 +187,21 @@ form.onsubmit = function(e) {
   e.preventDefault();
   return false; // Prevent submitting the form to prevent a page reload
 };
+
+const injectExampleVideoSelector = (key: string, url: string) => {
+  const jel = $(`<div id="example-${key}">${url}</div>`);
+  jel.on("click", () => {
+    $("#video-loading-form input[name='videoUrl']").val(jel.html());
+  });
+  $("#video-loading-form-container").prepend(jel);
+  exampleVideos.local1
+};
+const injectExampleVideoSelectors = () => {
+  for (const key in exampleVideos) {
+    if (exampleVideos.hasOwnProperty(key)) {
+      const url = exampleVideos[key];
+      injectExampleVideoSelector(key, url);
+    }
+  }
+};
+injectExampleVideoSelectors();

@@ -366,7 +366,7 @@ export class YouTubeVideo extends VideoAPI {
         return resolve(this);
       }
 
-      this.setStateChangeHandler(VideoPlayerStatus.stopped, actionId, (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
+      this.setStateChangeHandler(VideoPlayerStatus.cued, actionId, (ytv: YouTubeVideo, event: YT.PlayerEvent): void => {
         logger.debug(this.logCtx(actionId, ctx, `stateChangeHandlers.${this.getStatus()}():> Play unstarted(stopped)`));
         this.stateChangeHandlerFulfilled(VideoPlayerStatus.stopped, actionId);
         resolve(this);

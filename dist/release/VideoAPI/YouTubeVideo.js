@@ -307,7 +307,7 @@ class YouTubeVideo extends VideoAPI_1.VideoAPI {
                 logger.info(this.logCtx(actionId, ctx, `Video already status=${this.getStatus()}`));
                 return resolve(this);
             }
-            this.setStateChangeHandler(VideoAPI_1.VideoPlayerStatus.stopped, actionId, (ytv, event) => {
+            this.setStateChangeHandler(VideoAPI_1.VideoPlayerStatus.cued, actionId, (ytv, event) => {
                 logger.debug(this.logCtx(actionId, ctx, `stateChangeHandlers.${this.getStatus()}():> Play unstarted(stopped)`));
                 this.stateChangeHandlerFulfilled(VideoAPI_1.VideoPlayerStatus.stopped, actionId);
                 resolve(this);

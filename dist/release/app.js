@@ -40,6 +40,11 @@ initLoggers();
 const logger = skicker_logger_manager_1.LoggerManager.getLogger("Skicker");
 const $ = require("jquery");
 require("./app.css");
+const exampleVideos = {
+    local1: "http://localhost:5000/" + require("../test/helpers/aarnilasku.mp4"),
+    local2: "http://localhost:5000/" + require("../test/helpers/aarnilammas.mp4"),
+    yt1: "https://www.youtube.com/watch?v=duQ9_578RKw",
+};
 const VideoPlayer_1 = require("./VideoPlayer");
 /* 2. Transform form submission to video player options */
 const transformFormDataToIVideoAPIOptions = (data) => {
@@ -155,4 +160,21 @@ form.onsubmit = function (e) {
     e.preventDefault();
     return false; // Prevent submitting the form to prevent a page reload
 };
+const injectExampleVideoSelector = (key, url) => {
+    const jel = $(`<div id="example-${key}">${url}</div>`);
+    jel.on("click", () => {
+        $("#video-loading-form input[name='videoUrl']").val(jel.html());
+    });
+    $("#video-loading-form-container").prepend(jel);
+    exampleVideos.local1;
+};
+const injectExampleVideoSelectors = () => {
+    for (const key in exampleVideos) {
+        if (exampleVideos.hasOwnProperty(key)) {
+            const url = exampleVideos[key];
+            injectExampleVideoSelector(key, url);
+        }
+    }
+};
+injectExampleVideoSelectors();
 //# sourceMappingURL=app.js.map

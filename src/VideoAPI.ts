@@ -3,6 +3,7 @@
  */
 export enum SupportedVideoAPIs { //Using string-based enums, for easier debugging
   YouTube = "YouTube",
+  HTML5Video = "HTML5Video",
 }
 
 /*
@@ -98,6 +99,7 @@ export abstract class VideoAPI {
    */
   public abstract seekVideo(actionId: string, position: number): Promise<VideoAPI>;
   public abstract setPlaybackRate(actionId: string, playbackRate: number): Promise<VideoAPI>;
+  /** 0 is mute, 100 is full volume */
   public abstract setVolume(volume: number): void;
   public abstract startVideo(actionId: string): Promise<VideoAPI>;
   public abstract stopVideo(actionId: string): Promise<VideoAPI>;

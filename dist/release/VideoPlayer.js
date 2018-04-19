@@ -7,6 +7,7 @@ const UnknownVideoSource_1 = require("./Exception/UnknownVideoSource");
 const skicker_logger_manager_1 = require("skicker-logger-manager");
 const PromiseTimeout_1 = require("./Exception/PromiseTimeout");
 const UnknownState_1 = require("./Exception/UnknownState");
+const HTML5Video_1 = require("./VideoAPI/HTML5Video");
 const logger = skicker_logger_manager_1.LoggerManager.getLogger("Skicker.VideoPlayer");
 /**
  * Front-end to interface with multiple video playing sources.
@@ -235,8 +236,9 @@ class VideoPlayer {
         logger.debug("selectVideoAPI():> ");
         if (this.api === VideoAPI_1.SupportedVideoAPIs.YouTube) {
             return new YouTubeVideo_1.YouTubeVideo(this.rootElement, this.options);
-            //    else if (api === SupportedVideoAPIs.Vimeo) {
-            //      return new VimeoVideo();
+        }
+        else if (this.api === VideoAPI_1.SupportedVideoAPIs.HTML5Video) {
+            return new HTML5Video_1.HTML5Video(this.rootElement, this.options);
         }
         else {
             throw new UnknownVideoSource_1.UnknownVideoSourceException(`Video source '${this.api}' is not supported`);
@@ -251,7 +253,9 @@ class VideoPlayer {
      * @throws BadParameterException if the URL is missing some important parameter
      */
     parseURL(url) {
-        logger.debug(`parseURL():> params url=${url}`);
+        const userAgent = navigator.userAgent.toLowerCase();
+        logger.debug(`parseURL():> params url=${url}, userAgent=${userAgent}`);
+        // YouTube long url
         if (url.hostname === "www.youtube.com") {
             this.api = VideoAPI_1.SupportedVideoAPIs.YouTube;
             const videoId = url.searchParams.get("v");
@@ -262,8 +266,7 @@ class VideoPlayer {
                 this.videoId = videoId;
             }
             return this.api;
-            //    } else if (url.hostname === "www.vimeo.com") {
-            //      return new VimeoVideo();
+            // YouTube short url
         }
         else if (url.hostname === "youtu.be") {
             this.api = VideoAPI_1.SupportedVideoAPIs.YouTube;
@@ -272,6 +275,30 @@ class VideoPlayer {
                 throw new BadParameter_1.BadParameterException(`URL '${url.toString()}' doesn't include the video id. Using video source '${this.api}'. Expected the URL to look like 'https://youtu.be/d1mX_MBz0HU'`);
             }
             this.videoId = videoId;
+            // HTML5 Video, local or remote
+            // https://developer.mozilla.org/en-US/docs/Web/HTML/Supported_media_formats
+        }
+        else if (url.pathname.match(/\.(\w{2,4})$/)) {
+            this.api = VideoAPI_1.SupportedVideoAPIs.HTML5Video;
+            if (url.pathname.match(/\.(?:mp4|ogg|webm)$/)) {
+                this.videoId = url.toString();
+            }
+            else {
+                const match = url.pathname.match(/\.(\w{2,4})$/);
+                throw new BadParameter_1.BadParameterException(`URL '${url.toString()}' points to a file, but the Video type '${match[1]}' is unsupported. Using video source '${this.api}'. Expected the URL to look like 'https://example.com/path-to-video/video.mp4'`);
+            }
+            /* Is it necessary to intercept a local video specifically since it uses the HTML5 Video-element in the background anyway?
+            // This is a local video file
+            } else if (url.protocol.match(/^file/) && url.pathname.match(/\.(?:mp4|ogg|webm)$/)) {
+                  //https://github.com/electron/electron/issues/2288
+              if (userAgent.indexOf(' electron/') > -1 ||
+                  //How to reliably detect if inside a NW.js app?
+                  ???? > -1) {
+        
+              }
+            */
+            //    } else if (url.hostname === "www.vimeo.com") {
+            //      return new VimeoVideo();
         }
         else {
             throw new UnknownVideoSource_1.UnknownVideoSourceException(`Couldn't identify a known video source from URL '${url.toString()}'`);

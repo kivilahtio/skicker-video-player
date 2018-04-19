@@ -11,21 +11,6 @@ const logger = LoggerManager.getLogger("Skicker.test.02");
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-describe("YouTube video URL parsing,", () => {
-  it("https://youtu.be/BrW89n0Hss4", () => {
-    const vp: VideoPlayer = tu.createPlayer(new URL("https://youtu.be/BrW89n0Hss4"), {}, undefined);
-    expect(vp.getVideoId())
-    .toEqual("BrW89n0Hss4");
-  });
-
-  it("https://www.youtube.com/watch?v=C0DPdy98e4c", () => {
-    const vp: VideoPlayer = tu.createPlayer(new URL("https://www.youtube.com/watch?v=C0DPdy98e4c"), {}, undefined);
-    expect(vp.getVideoId())
-    .toEqual("C0DPdy98e4c");
-  });
-
-});
-
 describe("YouTube playback rate validation", () => {
   let vp: VideoPlayer;
 
